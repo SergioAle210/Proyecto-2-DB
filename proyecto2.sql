@@ -107,55 +107,91 @@ CREATE TABLE
         ID_Item INTEGER REFERENCES Items (ID_Item)
     );
 
+ --Indices
 
-    --Indices
+-- Uso de email para filtro de usuarios
+CREATE INDEX idx_usuarios_correo ON Usuarios (Correo_Electronico);
 
-    --Orden de pedidos por fecha y hora y estado
-    CREATE INDEX idx_pedidos_state_dte ON Pedidos(Estado, Fecha_Hora_Pedido);
+-- Mejora en joins entre mesas y areas
+CREATE INDEX idx_mesas_id_area ON Mesas (ID_Area);
 
-    -- Productos por tipo
-    CREATE INDEX idx_items_tipo ON Items(Tipo);
+-- Cuentas por estados
+CREATE INDEX idx_cuentas_estado ON Cuentas (Estado);
 
-    -- Facturas por fecha y pagos por tipo
-    CREATE INDEX idx_facturas_fecha ON Facturas(Fecha_Apertura);
-    CREATE INDEX idx_pagos_tipo ON Pagos(Tipo_Pago);
+-- pedidos por fecha y hora
+CREATE INDEX idx_pedidos_fecha_hora ON Pedidos (Fecha_Hora_Pedido);
+
+-- items por tipo
+CREATE INDEX idx_items_tipo ON Items (Tipo);
+
+-- join DetallePedido y Pedido
+CREATE INDEX idx_detalle_pedido_id_pedido ON Detalle_Pedido (ID_Pedido);
+CREATE INDEX idx_detalle_pedido_id_item ON Detalle_Pedido (ID_Item);
+
+-- For Mejora en joins entre cuenta y pedidos
+CREATE INDEX idx_facturas_id_cuenta ON Facturas (ID_Cuenta);
+CREATE INDEX idx_facturas_pedido ON Facturas (PedidoID);
+
+-- Index para busqueda de pagos por tipo
+CREATE INDEX idx_pagos_tipo ON Pagos (Tipo_Pago);
+
+-- filtros para orden de encuestas 
+CREATE INDEX idx_encuestas_id_cuenta ON Encuestas (ID_Cuenta);
+
+-- For busqueda de quejas
+CREATE INDEX idx_quejas_cliente ON Quejas (ID_Cliente);
+CREATE INDEX idx_quejas_empleado ON Quejas (ID_Empleado);
+CREATE INDEX idx_quejas_item ON Quejas (ID_Item);
+CREATE INDEX idx_quejas_fecha_hora ON Quejas (Fecha_Hora);
+
 
     
-  --  Triggers
-
-  -- UPDATE en el estado de la cuenta 
-  CREATE TRIGGER trg_actualizar_estado_cuenta
-AFTER UPDATE OF Estado ON Pedidos
+--  Triggers
+-- Actualizar estado de mesas
+CREATE TRIGGER update_statemesa_aftrpedido
+AFTER INSERT ON Pedidos
 FOR EACH ROW
-WHEN (NEW.Estado = 'Cerrado')
-BEGIN
-    UPDATE Cuentas
-    SET Estado = 'Cerrado'
-    WHERE ID_Cuenta = NEW.ID_Cuenta;
-END;
+EXECUTE FUNCTION update_statemesa_aftrpedido();
 
--- Trigger para calcular el total de fáctura
-CREATE TRIGGER trg_calcular_total_factura
+CREATE TRIGGER update_mesa_state_aftercierre
 AFTER UPDATE OF Estado ON Cuentas
 FOR EACH ROW
-WHEN (NEW.Estado = 'Cerrado')
-BEGIN
-    UPDATE Facturas
-    SET Total = (SELECT SUM(Precio * Cantidad) FROM Detalle_Pedido
-                 JOIN Pedidos ON Detalle_Pedido.ID_Pedido = Pedidos.ID_Pedido
-                 WHERE Pedidos.ID_Cuenta = NEW.ID_Cuenta)
-    WHERE Facturas.ID_Cuenta = NEW.ID_Cuenta;
-END;
+WHEN (NEW.Estado = 'cerrada')
+EXECUTE FUNCTION update_mesastate();
 
-
--- Cambios en mesas o pedidos
-
-CREATE TRIGGER trg_auditar_cambios_pedido
-AFTER UPDATE ON Pedidos
+-- Creado de facturas automatica
+CREATE TRIGGER create_factura_on_cuenta_close
+AFTER UPDATE OF Estado ON Cuentas
 FOR EACH ROW
-BEGIN
-    INSERT INTO Auditoria_Pedidos (ID_Pedido, FechaHora, Accion)
-    VALUES (NEW.ID_Pedido, CURRENT_TIMESTAMP, 'Pedido Actualizado');
-END;
+WHEN (NEW.Estado = 'cerrada')
+EXECUTE FUNCTION create_factura_from_cuenta();
 
---
+-- Calculo de facturas
+CREATE TRIGGER create_factura_on_cuenta_close
+AFTER UPDATE OF Estado ON Cuentas
+FOR EACH ROW
+WHEN (NEW.Estado = 'cerrada')
+EXECUTE FUNCTION create_factura_from_cuenta();
+
+--Actualización de Inventario
+CREATE TRIGGER inventario_after_pedido
+AFTER INSERT ON Detalle_Pedido
+FOR EACH ROW
+EXECUTE FUNCTION update_inventory();
+
+
+--Cálculo de Propina
+CREATE TRIGGER calculate_tip_on_cierre
+AFTER UPDATE OF Estado ON Pedidos
+FOR EACH ROW
+WHEN (NEW.Estado = 'cerrado')
+EXECUTE FUNCTION calculate_tip();
+
+--Feedback
+CREATE TRIGGER update_feedback
+AFTER INSERT ON Encuestas
+FOR EACH ROW
+EXECUTE FUNCTION update_waiter_feedback_score();
+
+
+
