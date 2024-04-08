@@ -68,10 +68,13 @@ CREATE TABLE
     Facturas (
         ID_Factura SERIAL PRIMARY KEY,
         ID_Cuenta INTEGER NOT NULL REFERENCES Cuentas (ID_Cuenta),
+        PedidoID INTEGER NOT NULL REFERENCES Pedidos (ID_Pedido),
         NIT_Cliente VARCHAR(20),
         Nombre_Cliente VARCHAR(255) NOT NULL,
         Direccion_Cliente VARCHAR(255),
         Total NUMERIC(10, 2) NOT NULL
+        Fecha_Hora TIMESTAMP NOT NULL
+
     );
 
 -- Pagos
@@ -103,3 +106,56 @@ CREATE TABLE
         ID_Empleado INTEGER REFERENCES Usuarios (ID_Usuario),
         ID_Item INTEGER REFERENCES Items (ID_Item)
     );
+
+
+    --Indices
+
+    --Orden de pedidos por fecha y hora y estado
+    CREATE INDEX idx_pedidos_state_dte ON Pedidos(Estado, Fecha_Hora_Pedido);
+
+    -- Productos por tipo
+    CREATE INDEX idx_items_tipo ON Items(Tipo);
+
+    -- Facturas por fecha y pagos por tipo
+    CREATE INDEX idx_facturas_fecha ON Facturas(Fecha_Apertura);
+    CREATE INDEX idx_pagos_tipo ON Pagos(Tipo_Pago);
+
+    
+  --  Triggers
+
+  -- UPDATE en el estado de la cuenta 
+  CREATE TRIGGER trg_actualizar_estado_cuenta
+AFTER UPDATE OF Estado ON Pedidos
+FOR EACH ROW
+WHEN (NEW.Estado = 'Cerrado')
+BEGIN
+    UPDATE Cuentas
+    SET Estado = 'Cerrado'
+    WHERE ID_Cuenta = NEW.ID_Cuenta;
+END;
+
+-- Trigger para calcular el total de fáctura
+CREATE TRIGGER trg_calcular_total_factura
+AFTER UPDATE OF Estado ON Cuentas
+FOR EACH ROW
+WHEN (NEW.Estado = 'Cerrado')
+BEGIN
+    UPDATE Facturas
+    SET Total = (SELECT SUM(Precio * Cantidad) FROM Detalle_Pedido
+                 JOIN Pedidos ON Detalle_Pedido.ID_Pedido = Pedidos.ID_Pedido
+                 WHERE Pedidos.ID_Cuenta = NEW.ID_Cuenta)
+    WHERE Facturas.ID_Cuenta = NEW.ID_Cuenta;
+END;
+
+
+-- Cambios en mesas o pedidos
+
+CREATE TRIGGER trg_auditar_cambios_pedido
+AFTER UPDATE ON Pedidos
+FOR EACH ROW
+BEGIN
+    INSERT INTO Auditoria_Pedidos (ID_Pedido, FechaHora, Accion)
+    VALUES (NEW.ID_Pedido, CURRENT_TIMESTAMP, 'Pedido Actualizado');
+END;
+
+--
