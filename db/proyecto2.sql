@@ -176,7 +176,12 @@ EXECUTE FUNCTION create_factura_from_cuenta();
 --Actualización de Inventario
 CREATE TRIGGER inventario_after_pedido
 AFTER INSERT ON Detalle_Pedido
-FOR EACH ROW
+FOR EACH ROWMesas
+Abrir cuenta de mesa
+POST /api/mesas/:id_mesa/abrir-cuenta - Abrir una nueva cuenta para una mesa.
+Cerrar cuenta de mesa
+PUT /api/cuentas/:id_cuenta/cerrar - Cerrar la cuenta de una mesa.
+
 EXECUTE FUNCTION update_inventory();
 
 
