@@ -148,11 +148,32 @@ CREATE INDEX idx_quejas_fecha_hora ON Quejas (Fecha_Hora);
     
 --  Triggers
 -- Actualizar estado de mesas
+
+
+CREATE OR REPLACE FUNCTION update_statemesa_aftrpedido()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar el estado de la mesa a 'ocupada' cuando se inserta un nuevo pedido
+    UPDATE mesas SET estado = 'ocupada'
+    WHERE id_mesa = NEW.id_mesa;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER update_statemesa_aftrpedido
 AFTER INSERT ON Pedidos
 FOR EACH ROW
 EXECUTE FUNCTION update_statemesa_aftrpedido();
 
+CREATE OR REPLACE FUNCTION update_mesastate()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE mesas SET estado = 'disponible'
+    WHERE id_mesa = (SELECT id_mesa FROM cuentas WHERE id_cuenta = NEW.id_cuenta);
+    RETURN NEW;
+END;
+
+$$ LANGUAGE plpgsql;
 CREATE TRIGGER update_mesa_state_aftercierre
 AFTER UPDATE OF Estado ON Cuentas
 FOR EACH ROW
@@ -160,39 +181,101 @@ WHEN (NEW.Estado = 'cerrada')
 EXECUTE FUNCTION update_mesastate();
 
 -- Creado de facturas automatica
+CREATE OR REPLACE FUNCTION create_factura_from_cuenta()
+RETURNS TRIGGER AS $$
+DECLARE
+    total_factura NUMERIC;
+BEGIN
+    -- Calcular el total de la factura sumando todos los precios de los items pedidos
+    SELECT SUM(i.precio * dp.cantidad) INTO total_factura
+    FROM detalle_pedido dp
+    JOIN items i ON dp.id_item = i.id_item
+    WHERE dp.id_pedido IN (SELECT id_pedido FROM pedidos WHERE id_cuenta = NEW.id_cuenta);
+
+    -- Insertar una nueva factura con el total calculado
+    INSERT INTO facturas (id_cuenta, fecha_hora, total)
+    VALUES (NEW.id_cuenta, NOW(), total_factura);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER create_factura_on_cuenta_close
-AFTER UPDATE OF Estado ON Cuentas
+AFTER UPDATE OF estado ON cuentas
 FOR EACH ROW
-WHEN (NEW.Estado = 'cerrada')
+WHEN (NEW.estado = 'cerrada')
 EXECUTE FUNCTION create_factura_from_cuenta();
 
--- Calculo de facturas
-CREATE TRIGGER create_factura_on_cuenta_close
-AFTER UPDATE OF Estado ON Cuentas
-FOR EACH ROW
-WHEN (NEW.Estado = 'cerrada')
-EXECUTE FUNCTION create_factura_from_cuenta();
 
 --Actualización de Inventario
+CREATE OR REPLACE FUNCTION update_inventory()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar el stock del ítem pedido restando la cantidad pedida
+    UPDATE items SET stock = stock - NEW.cantidad
+    WHERE id_item = NEW.id_item;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 CREATE TRIGGER inventario_after_pedido
 AFTER INSERT ON Detalle_Pedido
-FOR EACH ROWMesas
-Abrir cuenta de mesa
-POST /api/mesas/:id_mesa/abrir-cuenta - Abrir una nueva cuenta para una mesa.
-Cerrar cuenta de mesa
-PUT /api/cuentas/:id_cuenta/cerrar - Cerrar la cuenta de una mesa.
-
+FOR EACH ROW
 EXECUTE FUNCTION update_inventory();
 
 
+
 --Cálculo de Propina
+CREATE OR REPLACE FUNCTION calculate_tip()
+RETURNS TRIGGER AS $$
+DECLARE
+    total_pedido NUMERIC;
+    propina NUMERIC;
+BEGIN
+    -- Obtener el total del pedido
+    SELECT SUM(dp.cantidad * i.precio) INTO total_pedido
+    FROM detalle_pedido dp
+    JOIN items i ON dp.id_item = i.id_item
+    WHERE dp.id_pedido = NEW.id_pedido;
+
+    -- Calcular la propina como el 10% del total del pedido
+    propina := total_pedido * 0.10;
+
+    -- Actualizar la tabla de pedidos con la propina calculada
+    UPDATE pedidos SET propina = propina WHERE id_pedido = NEW.id_pedido;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER calculate_tip_on_cierre
-AFTER UPDATE OF Estado ON Pedidos
+AFTER UPDATE OF estado ON pedidos
 FOR EACH ROW
-WHEN (NEW.Estado = 'cerrado')
+WHEN (NEW.estado = 'cerrado')
 EXECUTE FUNCTION calculate_tip();
 
+
 --Feedback
+CREATE OR REPLACE FUNCTION update_waiter_feedback_score()
+RETURNS TRIGGER AS $$
+DECLARE
+    average_kindness NUMERIC;
+    average_accuracy NUMERIC;
+BEGIN
+    -- Calcular la nueva puntuación promedio de amabilidad y exactitud para el mesero asociado
+    SELECT AVG(amabilidad_mesero), AVG(exactitud_pedido) INTO average_kindness, average_accuracy
+    FROM encuestas
+    WHERE id_cuenta = NEW.id_cuenta; -- Suponiendo que id_cuenta pueda usarse para determinar el mesero
+
+    -- Actualizar la tabla de meseros (o la tabla que mantenga las puntuaciones de los meseros)
+    UPDATE meseros SET 
+        puntuacion_amabilidad = average_kindness,
+        puntuacion_exactitud = average_accuracy
+    WHERE id_mesero = (SELECT id_mesero FROM cuentas WHERE id_cuenta = NEW.id_cuenta); -- Necesitas una forma de conectar cuentas con meseros
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER update_feedback
 AFTER INSERT ON Encuestas
 FOR EACH ROW
@@ -200,3 +283,16 @@ EXECUTE FUNCTION update_waiter_feedback_score();
 
 
 
+CREATE OR REPLACE FUNCTION log_estado_pedido() 
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO log_pedidos(id_pedido, estado_anterior, estado_nuevo, fecha_cambio)
+    VALUES (NEW.id_pedido, OLD.estado, NEW.estado, NOW());
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_log_estado_pedido
+AFTER UPDATE OF estado ON pedidos
+FOR EACH ROW
+EXECUTE FUNCTION log_estado_pedido();
