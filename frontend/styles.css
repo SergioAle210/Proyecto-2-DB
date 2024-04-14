@@ -1,0 +1,101 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #5f5f5f;
+}
+
+header {
+    display: flex;
+    align-items: center; 
+    padding: 20px; 
+    text-align: center;
+    align-content: center;
+    justify-content: center;
+    font-weight: bold;
+    background-color: #333; 
+    color: #fefefe;
+}
+
+div {
+    margin: 20px;
+    padding: 20px;
+    background-color: #beb8b8;
+    border-radius: 10px;
+    height: 100%;
+}
+
+nav ul {
+    list-style-type: none; /* Elimina los puntos de la lista */
+    margin: 0;
+    padding: 10px 0px;
+    text-align: center;
+    background-color: #333;
+}
+
+nav ul li {
+    display: inline; /* Coloca los elementos de la lista en línea */
+}
+
+nav ul li:not(:last-child) {
+    margin-right: 10px; /* Espacio entre los elementos de la lista */
+}
+
+nav ul li a {
+    text-decoration: none;
+    position: relative;
+    color: #fefefe;
+    font-size: 20px;
+    padding: 0px 10px; /* Espacio a la derecha de cada enlace */
+}
+
+nav ul li:last-child a {
+    border-right: none; /* Elimina el borde derecho del último enlace */
+}
+
+nav ul li a::after {
+    content: '';
+    position: absolute;
+    bottom: -3px; /* Ajusta la posición de la línea según tu diseño */
+    left: 0;
+    width: 100%;
+    height: 3px; /* Grosor de la línea */
+    background-color: #007bff; /* Color de la línea */
+    transform: scaleX(0); /* Por defecto, la línea estará oculta */
+    transition: transform 0.3s ease; /* Transición suave para el efecto */
+}
+  
+nav ul li a:hover::after {
+    transform: scaleX(1); /* Muestra la línea al pasar el cursor */
+}
+
+footer {
+    padding: 10px 0px;
+    text-align: center;
+    background-color: #333;
+    color: #fefefe;
+}
+
+#logout {
+    background-color: #f44336; 
+    color: #fefefe; 
+    border: none;
+    padding: 10px 20px; 
+    cursor: pointer; 
+    border-radius: 5px; 
+  }
+  
+#logout:hover {
+    background-color: #cc0000; 
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+}
+
+div p {
+    text-align: justify;
+    color: #802200;
+    font-size: 20px;
+}
