@@ -43,6 +43,10 @@ CREATE TABLE
         ID_Cuenta INTEGER NOT NULL REFERENCES Cuentas (ID_Cuenta),
         Fecha_Hora_Pedido TIMESTAMP NOT NULL
     );
+   
+ALTER TABLE pedidos
+ADD COLUMN estado VARCHAR(255);
+
 
 -- Platos y Bebidas (Items)
 CREATE TABLE
@@ -72,8 +76,8 @@ CREATE TABLE
         NIT_Cliente VARCHAR(20),
         Nombre_Cliente VARCHAR(255) NOT NULL,
         Direccion_Cliente VARCHAR(255),
-        Total NUMERIC(10, 2) NOT NULL
-        Fecha_Hora TIMESTAMP NOT NULL
+        Total NUMERIC(10, 2) NOT null,
+        FechaHora TIMESTAMP NOT NULL
 
     );
 
