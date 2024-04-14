@@ -28,24 +28,20 @@ app.use('/api/reportes', rutaReportes);
 app.use('/api/feedback', rutaFeedback);
 
 
-app.get('/', (req, res) => {
-  res.send('API funcionando correctamente.');
-});
-
-// Endpoint de prueba para verificar la conexión a la base de datos
-fetch('http://localhost:3000/test-db')
-  .then(response => {
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    return response.json(); // or .text() if it's not JSON
-  })
-  .then(data => {
-    console.log(data); // Process your data here
-  })
-  .catch(error => {
-    console.error('There has been a problem with your fetch operation:', error);
+app.get('/test-db', (req, res) => {
+    // Replace this with your actual database testing logic
+    // For example, you could try to perform a simple SELECT query
+    pool.query('SELECT NOW()', (err, result) => {
+      if (err) {
+        console.error('Error testing database:', err);
+        res.status(500).send('Database connection failed');
+      } else {
+        console.log('Database connection test succeeded:', result.rows);
+        res.status(200).send('Database connection test succeeded');
+      }
+    });
   });
+  
 
 
 // Error handling middleware
