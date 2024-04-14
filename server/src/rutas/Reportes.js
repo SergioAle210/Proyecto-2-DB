@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require('../../conn'); 
 
 // 1 Reporte: Platos más pedidos
-router.get('/platos-mas-pedidos', async (req, res) => {
+router.get('/platos-mas-pedidos/:fechaInicio/:fechaFin', async (req, res) => {
   try {
     const { fecha_inicio, fecha_fin } = req.query;
 
@@ -27,7 +27,7 @@ router.get('/platos-mas-pedidos', async (req, res) => {
 });
 
 // 2 Reporte: Horario con más pedidos
-router.get('/horario-pedidos-mas-ingresados', async (req, res) => {
+router.get('/horario-pedidos-mas-ingresados/:fechaInicio/:fechaFin', async (req, res) => {
   try {
     // Obtener los parámetros de consulta del rango de fechas
     const { fecha_inicio, fecha_fin } = req.query;
@@ -52,7 +52,7 @@ router.get('/horario-pedidos-mas-ingresados', async (req, res) => {
 });
 
 // 3 Reporte: Promedio de tiempo de comida
-router.get('/promedio-tiempo-comida', async (req, res) => {
+router.get('/promedio-tiempo-comida/:fechaInicio/:fechaFin', async (req, res) => {
   try {
     // Obtener los parámetros de consulta del rango de fechas
     const { fecha_inicio, fecha_fin } = req.query;
@@ -79,7 +79,7 @@ router.get('/promedio-tiempo-comida', async (req, res) => {
 });
 
 // 4 Reporte: Quejas por empleado
-router.get('/reporte-quejas-empleados', async (req, res) => {
+router.get('/reporte-quejas-empleados/:fechaInicio/:fechaFin', async (req, res) => {
   try {
     // Obtener los parámetros de consulta del rango de fechas
     const { fecha_inicio, fecha_fin } = req.query;
@@ -105,7 +105,7 @@ router.get('/reporte-quejas-empleados', async (req, res) => {
 });
 
 // 5 Reporte: Quejas por plato
-router.get('/reporte-quejas-items', async (req, res) => {
+router.get('/reporte-quejas-items/:fechaInicio/:fechaFin', async (req, res) => {
   try {
     // Obtener las fechas de inicio y fin del rango desde la solicitud
     const { fechaInicio, fechaFin } = req.query;
@@ -131,7 +131,7 @@ router.get('/reporte-quejas-items', async (req, res) => {
 });
 
 // 6 Reporte: Eficiencia de meseros
-router.get('/eficiencia-meseros', async (req, res) => {
+router.get('/eficiencia-meseros/:fechaInicio/:fechaFin', async (req, res) => {
   try {
     // Consulta SQL para obtener la eficiencia de los meseros en los últimos 6 meses
     const result = await pool.query(
