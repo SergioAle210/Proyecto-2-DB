@@ -131,7 +131,7 @@ router.get('/reporte-quejas-items/:fechaInicio/:fechaFin', async (req, res) => {
 });
 
 // 6 Reporte: Eficiencia de meseros
-router.get('/eficiencia-meseros/:fechaInicio/:fechaFin', async (req, res) => {
+router.get('/eficiencia-meseros', async (req, res) => {
   try {
     // Consulta SQL para obtener la eficiencia de los meseros en los últimos 6 meses
     const result = await pool.query(

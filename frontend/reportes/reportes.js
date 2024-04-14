@@ -1,42 +1,49 @@
-function obtenerReporteVentas() {
-
-function obtenerReporteVentas() {
-    fetch('http://localhost:3000/api/reportes/ventas', {
-        method: 'GET', 
-        headers: {
-            'Content-Type': 'application/json',
-            
-        },
-        
-    })
-    .then(response => {
-  
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
- 
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('No se recibió una respuesta JSON válida');
-        }
-        return response.json();
-    })
-    .then(data => {
-     
-        console.log(data);
-        const reporteVentasDiv = document.getElementById('reporteVentas');
-        reporteVentasDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-    })
-    .catch(error => {
-        
-        console.error('Error al obtener el reporte de ventas:', error);
-        alert('Error al obtener el reporte de ventas: ' + error.message);
-    });
+// reporte de los platos mas pedidos 
+function obtenerReportePlatosMasPedidos() {
+    const fechaInicio = document.getElementById('fechaInicioPlatos').value;
+    const fechaFin = document.getElementById('fechaFinPlatos').value;
+    // Resto del código...
 }
+
+function obtenerReporteHorarioMasPedidos() {
+    const fechaInicio = document.getElementById('fechaInicioHorario').value;
+    const fechaFin = document.getElementById('fechaFinHorario').value;
+    // Resto del código...
+}
+
+function obtenerReportePromedioTiempoComida() {
+    const fechaInicio = document.getElementById('fechaInicioTiempoComida').value;
+    const fechaFin = document.getElementById('fechaFinTiempoComida').value;
+    // Resto del código...
+}
+
+function obtenerReporteQuejasPorEmpleado() {
+    const fechaInicio = document.getElementById('fechaInicioQuejasEmpleado').value;
+    const fechaFin = document.getElementById('fechaFinQuejasEmpleado').value;
+    // Resto del código...
+}
+
+function obtenerReporteQuejasPorPlato() {
+    const fechaInicio = document.getElementById('fechaInicioQuejasPlato').value;
+    const fechaFin = document.getElementById('fechaFinQuejasPlato').value;
+    // Resto del código...
+}
+
+function obtenerReporteEficienciaMeseros() {
+    const fechaInicio = document.getElementById('fechaInicioEficienciaMeseros').value;
+    const fechaFin = document.getElementById('fechaFinEficienciaMeseros').value;
+    // Resto del código...
+}
+
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    const botonReporteVentas = document.querySelector('#reporteVentas button');
-    botonReporteVentas.addEventListener('click', obtenerReporteVentas);
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', function() {
+            const functionName = 'obtenerReporte' + button.parentElement.querySelector('h2').textContent.replace(/\s+/g, '');
+            if (typeof window[functionName] === 'function') {
+                window[functionName]();
+            }
+        });
+    });
 });
-}

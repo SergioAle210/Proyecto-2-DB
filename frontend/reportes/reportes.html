@@ -1,22 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reportes</title>
-    <link rel="stylesheet" href="reportes.css">
-</head>
-<body>
+    <link rel="stylesheet" href="reportes.css" />
+  </head>
+  <body>
     <h1>Reportes del Restaurante</h1>
-    
+
     <section>
-        <h2>Reporte de Ventas</h2>
-        <button onclick="obtenerReporteVentas()">Generar Reporte</button>
-        <div id="reporteVentas"></div>
+      <h2>Reporte de Platos más Pedidos</h2>
+      <label for="fechaInicioPlatos">Fecha de inicio:</label>
+      <input type="date" id="fechaInicioPlatos" />
+      <label for="fechaFinPlatos">Fecha de fin:</label>
+      <input type="date" id="fechaFinPlatos" />
+      <button onclick="obtenerReportePlatosMasPedidos()">
+        Generar Reporte
+      </button>
+      <div id="reportePlatosMasPedidos"></div>
     </section>
 
-    <!-- Añade aquí más secciones para diferentes tipos de reportes -->
+    <section>
+      <h2>Reporte de Horario con más Pedidos</h2>
+      <label for="fechaInicioHorario">Fecha de inicio:</label>
+      <input type="date" id="fechaInicioHorario" />
+      <label for="fechaFinHorario">Fecha de fin:</label>
+      <input type="date" id="fechaFinHorario" />
+      <button onclick="obtenerReporteHorarioMasPedidos()">
+        Generar Reporte
+      </button>
+      <div id="reporteHorarioMasPedidos"></div>
+    </section>
+
+    <section>
+      <h2>Reporte de Promedio de Tiempo de Comida</h2>
+      <label for="fechaInicioTiempoComida">Fecha de inicio:</label>
+      <input type="date" id="fechaInicioTiempoComida" />
+      <label for="fechaFinTiempoComida">Fecha de fin:</label>
+      <input type="date" id="fechaFinTiempoComida" />
+      <button onclick="obtenerReportePromedioTiempoComida()">
+        Generar Reporte
+      </button>
+      <div id="reportePromedioTiempoComida"></div>
+    </section>
+
+    <section>
+      <h2>Reporte de Quejas por Empleado</h2>
+      <label for="fechaInicioQuejasEmpleado">Fecha de inicio:</label>
+      <input type="date" id="fechaInicioQuejasEmpleado" />
+      <label for="fechaFinQuejasEmpleado">Fecha de fin:</label>
+      <input type="date" id="fechaFinQuejasEmpleado" />
+      <button onclick="obtenerReporteQuejasPorEmpleado()">
+        Generar Reporte
+      </button>
+      <div id="reporteQuejasPorEmpleado"></div>
+    </section>
+
+    <section>
+      <h2>Reporte de Quejas por Plato</h2>
+      <label for="fechaInicioQuejasPlato">Fecha de inicio:</label>
+      <input type="date" id="fechaInicioQuejasPlato" />
+      <label for="fechaFinQuejasPlato">Fecha de fin:</label>
+      <input type="date" id="fechaFinQuejasPlato" />
+      <button onclick="obtenerReporteQuejasPorPlato()">Generar Reporte</button>
+      <div id="reporteQuejasPorPlato"></div>
+    </section>
+
+    <section>
+      <h2>Reporte de Eficiencia de Meseros</h2>
+      <label for="fechaInicioEficienciaMeseros">Fecha de inicio:</label>
+      <input type="date" id="fechaInicioEficienciaMeseros" />
+      <label for="fechaFinEficienciaMeseros">Fecha de fin:</label>
+      <input type="date" id="fechaFinEficienciaMeseros" />
+      <button onclick="obtenerReporteEficienciaMeseros()">
+        Generar Reporte
+      </button>
+      <div id="reporteEficienciaMeseros"></div>
+    </section>
 
     <script src="reportes.js"></script>
-</body>
+  </body>
 </html>
