@@ -2,6 +2,7 @@
 const express = require('express');
 const pool = require('./conn');  // Asegúrate de que la ruta sea correcta
 
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
