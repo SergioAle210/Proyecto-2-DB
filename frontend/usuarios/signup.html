@@ -22,7 +22,13 @@
         placeholder="Contraseña"
         required
       />
-      <input type="role" id="rol" placeholder="role" required />
+      <select id="rol" required>
+        <option value="">Selecciona un rol</option>
+        <option value="usuario">Usuario</option>
+        <option value="admin">Administrador</option>
+        <option value="mesero">Mesero</option>
+        <option value="chef">Chef</option>
+      </select>
       <button type="submit">Registrarse</button>
     </form>
     <p>¿Ya tienes una cuenta? <a href="login.html">Iniciar sesión</a></p>
