@@ -33,15 +33,19 @@ app.get('/', (req, res) => {
 });
 
 // Endpoint de prueba para verificar la conexión a la base de datos
-app.get('/test-db', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW()'); 
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Error al conectar con la base de datos');
-  }
-});
+fetch('http://localhost:3000/test-db')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json(); // or .text() if it's not JSON
+  })
+  .then(data => {
+    console.log(data); // Process your data here
+  })
+  .catch(error => {
+    console.error('There has been a problem with your fetch operation:', error);
+  });
 
 
 // Error handling middleware
@@ -49,7 +53,7 @@ app.use((error, req, res, next) => {
     console.error(error.stack);
     res.status(500).send('Something broke!');
   });
-  
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
