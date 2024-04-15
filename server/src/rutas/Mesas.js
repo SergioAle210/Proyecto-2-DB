@@ -8,9 +8,10 @@ const mesas = async (req, res) => {
   try {
     // Asegúrate de que la tabla 'cuentas' tenga una columna 'id_mesa' para hacer el JOIN correctamente
     const result = await pool.query(`
-      SELECT m.id_mesa, m.capacidad, m.estado, c.id_cuenta, c.estado as cuenta_estado
+      SELECT m.id_mesa, m.capacidad, m.estado, c.id_cuenta, c.estado as cuenta_estado, a.nombre_area, a.puede_mover_mesas as area_puede_mover_mesas 
       FROM mesas m
       LEFT JOIN cuentas c ON m.id_mesa = c.id_mesa AND c.estado = 'abierta'
+      LEFT JOIN areas a ON m.id_area = a.id_area
     `);
     res.json(result.rows);
   } catch (err) {

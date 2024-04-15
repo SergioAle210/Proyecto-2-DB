@@ -15,11 +15,14 @@ function fetchTables() {
                 return;
             }
             data.forEach(mesa => {
+                const puedeMover = mesa.area_puede_mover_mesas ? "sí" : "no";
+
                 const tableDiv = document.createElement('div');
                 tableDiv.className = 'table';
                 tableDiv.innerHTML = `
                     <h3>Mesa ${mesa.id_mesa} - Capacidad: ${mesa.capacidad}</h3>
                     <p>Status: ${mesa.estado}</p>
+                    <p>La mesa se encuentra en el area de <strong>${mesa.nombre_area}</strong>. La mesa de puede mover: ${puedeMover} </p>
                 `;
                 if (mesa.cuenta_estado === 'abierta' && mesa.id_cuenta) {
                     const closeButton = document.createElement('button');
