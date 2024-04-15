@@ -81,10 +81,19 @@ const cerrarCuenta = async (req, res) => {
   }
 };
 
-
+const getMeseros = async (req, res) => {
+  try {
+      const result = await pool.query("SELECT ID_Usuario, Nombre FROM Usuarios WHERE Rol = 'Mesero';");
+      res.json(result.rows);
+  } catch (err) {
+      console.error('Error fetching waiters:', err);
+      res.status(500).send('Error fetching waiters');
+  }
+};
 
 // Rutas
 router.get('/', mesas);
+router.get('/Usuarios', getMeseros);
 router.post('/:id_mesa/abrir-cuenta', abrirCuenta);
 router.put('/cuentas/:id_cuenta/cerrar', cerrarCuenta);
 
