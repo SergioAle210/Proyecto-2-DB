@@ -44,7 +44,13 @@ function fetchTables() {
 }
 
 function setupEventListeners() {
-    document.getElementById('sendOrderBtn').addEventListener('click', submitOrder);
+    const addOrderForm = document.getElementById('addOrderForm');
+    if (addOrderForm) {
+        addOrderForm.addEventListener('submit', submitOrder);
+    } else {
+        // Este mensaje ayudará a identificar si el elemento no existe cuando se intenta añadir el listener.
+        console.error('AddOrderForm not found, cannot attach event listener');
+    }
 }
 
 function openAccount(id_mesa) {
@@ -115,18 +121,41 @@ function addSelectedItem() {
 
     updateSelectedItemsList();
 }
-
 function updateSelectedItemsList() {
     const lista = document.getElementById('selectedItemsList');
-    lista.innerHTML = '';
-    pedidoActual.forEach(item => {
+    lista.innerHTML = '';  // Clear current list
+
+    pedidoActual.forEach((item, index) => {
         const itemElement = document.createElement('li');
-        itemElement.textContent = `${item.itemName} - Cantidad: ${item.cantidad}`;
+        itemElement.textContent = `${item.itemName} - Cantidad: `;
+
+        // Input para modificar cantidad
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.min = '1';
+        quantityInput.value = item.cantidad;
+        quantityInput.style.width = '50px';
+
+      
+        // Botón para eliminar ítem
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Eliminar';
+        deleteButton.onclick = () => removeItem(index);  // Función para eliminar ítem
+        
+        itemElement.appendChild(quantityInput);
+        itemElement.appendChild(deleteButton);
         lista.appendChild(itemElement);
     });
 }
 
-function submitOrder() {
+
+function removeItem(index) {
+    pedidoActual.splice(index, 1);  // Elimina el ítem del array
+    updateSelectedItemsList();  // Actualiza la lista visual
+}
+
+function submitOrder(event) {
+    event.preventDefault();
     const idCuenta = parseInt(document.getElementById('idCuenta').value);
     const detalles = pedidoActual.map(item => ({
         idItem: parseInt(item.idItem),
