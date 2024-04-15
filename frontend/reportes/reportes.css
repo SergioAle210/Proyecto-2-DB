@@ -51,3 +51,9 @@ input {
     box-sizing: border-box;
     border-radius: 5px;
 }
+
+p {
+    color: #fff;
+    text-align: center;
+    margin: 10px 0;
+}
