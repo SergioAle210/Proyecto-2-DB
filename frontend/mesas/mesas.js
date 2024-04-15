@@ -77,6 +77,7 @@ function closeAccount(id_cuenta) {
             console.error('Error closing account:', error);
             alert('Failed to close account: ' + error);
         });
+        openInvoiceModal(id_cuenta);
 }
 
 function openOrderModal(idCuenta) {
@@ -180,14 +181,104 @@ function submitOrder(event) {
         updateSelectedItemsList();
         closeOrderModal();
         fetchTables();
+        fetchOrderDetails(data.pedido.id_pedido);
     })
     .catch(error => {
         console.error('Error al enviar el pedido:', error);
         alert('Error al enviar el pedido: ' + error.message);
     });
 }
+function fetchOrderDetails(idPedido) {
+    fetch(`http://localhost:3000/api/pedidos/'/:id_pedido'`)
+    .then(response => response.ok ? response.json() : Promise.reject(`Failed to fetch order details, status: ${response.status}`))
+    .then(detalles => {
+        console.log('Detalles del pedido:', detalles);
+        displayOrderDetails(detalles);
+    })
+    .catch(error => {
+        console.error('Error al obtener los detalles del pedido:', error);
+        alert('Error al obtener los detalles del pedido: ' + error.message);
+    });
+}
+
+function displayOrderDetails(detalles) {
+    const detallesContainer = document.getElementById('orderDetails'); // Asegúrate de que este elemento existe en tu HTML
+    detallesContainer.innerHTML = ''; // Limpiar detalles anteriores
+    detalles.forEach(detalle => {
+        const detalleElement = document.createElement('div');
+        detalleElement.innerHTML = `
+            <p>Ítem: ${detalle.nombre} - Cantidad: ${detalle.cantidad} - Precio unitario: $${detalle.precio.toFixed(2)} - Subtotal: $${(detalle.cantidad * detalle.precio).toFixed(2)}</p>
+        `;
+        detallesContainer.appendChild(detalleElement);
+    });
+}
+
+
 
 function closeOrderModal() {
     document.getElementById('addOrderModal').style.display = 'none';
+}
+function openInvoiceModal(idCuenta) {
+    document.getElementById('invoiceAccountId').value = idCuenta;
+    document.getElementById('invoiceModal').style.display = 'block';
+}
+
+function closeInvoiceModal() {
+    document.getElementById('invoiceModal').style.display = 'none';
+}
+
+function submitInvoice() {
+    const idCuenta = document.getElementById('invoiceAccountId').value;
+    const nitCliente = document.getElementById('customerNIT').value;
+    const nombreCliente = document.getElementById('customerName').value;
+    const direccionCliente = document.getElementById('customerAddress').value;
+
+    fetch(`http://localhost:3000/api/cuentas/${idCuenta}/pedido`, {
+        method: 'GET'
+    })
+    .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch order details'))
+    .then(orderDetails => {
+        const invoiceData = {
+            id_cuenta: parseInt(idCuenta),
+            nit_cliente: nitCliente,
+            nombre_cliente: nombreCliente,
+            direccion_cliente: direccionCliente,
+            detalles: orderDetails
+        };
+
+        return fetch('http://localhost:3000/api/facturas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(invoiceData)
+        });
+    })
+    .then(response => response.ok ? response.json() : Promise.reject('Failed to generate invoice'))
+    .then(invoice => {
+        console.log('Factura generada:', invoice);
+        displayInvoiceDetails(invoice);
+        alert('Factura generada exitosamente!');
+        closeInvoiceModal();
+        fetchTables(); // Refresca la lista de mesas para actualizar estados
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+    });
+}
+
+function displayInvoiceDetails(invoice) {
+    document.getElementById('invoiceAccountId').textContent = invoice.id_cuenta;
+    document.getElementById('invoiceDate').textContent = new Date().toLocaleString(); // Ejemplo de fecha/hora actual
+    const itemsList = document.getElementById('invoiceItems');
+    itemsList.innerHTML = '';
+
+    invoice.detalles.forEach(item => {
+        const itemElement = document.createElement('li');
+        itemElement.textContent = `Item ID: ${item.id_item}, Nombre: ${item.nombre}, Precio: $${item.precio}, Cantidad: ${item.cantidad}, Subtotal: $${item.subtotal}`;
+        itemsList.appendChild(itemElement);
+    });
+
+    const total = invoice.detalles.reduce((acc, item) => acc + item.subtotal, 0);
+    document.getElementById('invoiceTotal').textContent = total.toFixed(2);
 }
 

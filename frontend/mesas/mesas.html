@@ -33,6 +33,30 @@
     </form>
 </div>
 
+<!-- Invoice Modal -->
+<div id="invoiceModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeInvoiceModal()">&times;</span>
+        <h2>Detalles de Factura</h2>
+        <form id="invoiceForm">
+            <p><strong>ID de Cuenta:</strong> <span id="invoiceAccountId"></span></p>
+            <div id="orderDetails" style="display: none;"></div>
+            <ul id="invoiceItems"></ul>
+            <label for="customerNIT">NIT Cliente:</label>
+            <input type="text" id="customerNIT" required>
+            <label for="customerName">Nombre Cliente:</label>
+            <input type="text" id="customerName" required>
+            <label for="customerAddress">Dirección Cliente:</label>
+            <input type="text" id="customerAddress" required>
+            <p><strong>Total:</strong> $<span id="invoiceTotal"></span></p>
+            <p><strong>Fecha:</strong> <span id="invoiceDate"></span></p>
+            <button type="button" onclick="submitInvoice()">Enviar Factura</button>
+        </form>
+        <button type="button" onclick="closeInvoiceModal()">Cerrar</button>
+    </div>
+</div>
+
+
     
     <script src="mesas.js"></script>
 

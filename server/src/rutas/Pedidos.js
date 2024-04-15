@@ -53,7 +53,10 @@ const obtenerDetallesPedido = async (req, res) => {
 
     // Si el pedido existe, obtiene los detalles asociados a ese pedido
     const resultadoDetalles = await pool.query(
-      'SELECT * FROM detalle_pedido WHERE id_pedido = $1',
+      `SELECT dp.id_item, i.nombre, dp.cantidad, i.precio
+       FROM detalle_pedido dp
+       JOIN items i ON dp.id_item = i.id_item
+       WHERE dp.id_pedido = $1;`,
       [id_pedido]
     );
 

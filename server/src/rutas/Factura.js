@@ -6,6 +6,8 @@ const pool = require('../../conn');
 const obtenerPedido = async (req, res) => {
   try {
     const { id_cuenta } = req.params;
+    console.log(`Fetching order details for account: ${id_cuenta}`);
+
     const pedido = await pool.query(
       `SELECT p.id_pedido, p.fecha_hora_pedido, dp.id_item, i.nombre, dp.cantidad, i.precio, (dp.cantidad * i.precio) as subtotal
        FROM cuentas c
@@ -15,7 +17,11 @@ const obtenerPedido = async (req, res) => {
        WHERE c.id_cuenta = $1;`,
       [id_cuenta]
     );
+    console.log('Order details:', pedido.rows);
+
     res.json(pedido.rows);
+    console.log(`Detalles del pedido enviados con éxito para id_cuenta ${id_cuenta}`);
+
   } catch (error) {
     console.error(error);
     res.status(500).send('Error al obtener los detalles del pedido');
@@ -42,22 +48,37 @@ const obtenerFactura = async (req, res) => {
 };
 
 const cerrarCuentaYGenerarFactura = async (req, res) => {
-  const { id_cuenta, total, nit_cliente, nombre_cliente, direccion_cliente } = req.body;
+  const { id_cuenta, nit_cliente, nombre_cliente, direccion_cliente } = req.body;
   try {
-    await pool.query('BEGIN');
-    await pool.query('UPDATE cuentas SET estado = \'cerrada\', fecha_cierre = NOW() WHERE id_cuenta = $1', [id_cuenta]);
-    const nuevaFactura = await pool.query(
-      'INSERT INTO facturas (id_cuenta, total, fecha_hora, nit_cliente, nombre_cliente, direccion_cliente) VALUES ($1, $2, NOW(), $3, $4, $5) RETURNING id_factura;',
-      [id_cuenta, total, nit_cliente, nombre_cliente, direccion_cliente]
+    await pool.query('BEGIN'); // Start transaction
+    // Close the account
+    const updatedAccount = await pool.query(
+      'UPDATE cuentas SET estado = \'cerrada\', fecha_cierre = NOW() WHERE id_cuenta = $1 RETURNING *',
+      [id_cuenta]
     );
-    await pool.query('COMMIT');
-    res.status(201).json(nuevaFactura.rows[0]);
+
+    // Calculate total from orders
+    const orders = await pool.query(
+      'SELECT sum(precio * cantidad) AS total FROM pedidos JOIN detalle_pedido ON pedidos.id_pedido = detalle_pedido.id_pedido WHERE id_cuenta = $1',
+      [id_cuenta]
+    );
+    const total = orders.rows[0].total;
+
+    // Generate invoice
+    const invoice = await pool.query(
+      'INSERT INTO facturas (id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total, fecha) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
+      [id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total]
+    );
+
+    await pool.query('COMMIT'); // Commit transaction
+    res.status(201).json({ account: updatedAccount.rows[0], invoice: invoice.rows[0] });
   } catch (error) {
-    await pool.query('ROLLBACK');
-    console.error(error);
-    res.status(500).send('Error al cerrar la cuenta y generar la factura');
+    await pool.query('ROLLBACK'); // Rollback transaction on error
+    console.error('Error closing account and generating invoice:', error);
+    res.status(500).send('Failed to close account and generate invoice');
   }
 };
+
 
 const registrarPagoDeFactura = async (req, res) => {
   const { id_factura, monto, tipo_pago } = req.body;
