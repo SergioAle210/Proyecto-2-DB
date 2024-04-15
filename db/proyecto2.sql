@@ -242,44 +242,45 @@ CREATE TABLE Auditoria (
     Fecha_Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE OR REPLACE FUNCTION log_insert_usuarios()
+CREATE OR REPLACE FUNCTION log_insert_generic()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
-    VALUES ('Usuarios', 'INSERT', NEW.ID_Usuario, row_to_json(NEW)::text);
+    VALUES (TG_TABLE_NAME, 'INSERT', NEW.id, row_to_json(NEW)::text);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_insert_usuarios
-AFTER INSERT ON Usuarios
-FOR EACH ROW
-EXECUTE FUNCTION log_insert_usuarios();
-
-CREATE OR REPLACE FUNCTION log_update_usuarios()
+CREATE OR REPLACE FUNCTION log_update_generic()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
-    VALUES ('Usuarios', 'UPDATE', NEW.ID_Usuario, ('Antes:' || row_to_json(OLD)::text || ', Después:' || row_to_json(NEW)::text));
+    VALUES (TG_TABLE_NAME, 'UPDATE', NEW.id, ('Antes:' || row_to_json(OLD)::text || ', Después:' || row_to_json(NEW)::text));
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_update_usuarios
-AFTER UPDATE ON Usuarios
-FOR EACH ROW
-EXECUTE FUNCTION log_update_usuarios();
-
-CREATE OR REPLACE FUNCTION log_delete_usuarios()
+CREATE OR REPLACE FUNCTION log_delete_generic()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
-    VALUES ('Usuarios', 'DELETE', OLD.ID_Usuario, row_to_json(OLD)::text);
+    VALUES (TG_TABLE_NAME, 'DELETE', OLD.id, row_to_json(OLD)::text);
     RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_delete_usuarios
-AFTER DELETE ON Usuarios
+-- Triggers para la tabla Áreas
+CREATE TRIGGER trigger_insert_areas
+AFTER INSERT ON Areas
 FOR EACH ROW
-EXECUTE FUNCTION log_delete_usuarios();
+EXECUTE FUNCTION log_insert_generic();
+
+CREATE TRIGGER trigger_update_areas
+AFTER UPDATE ON Areas
+FOR EACH ROW
+EXECUTE FUNCTION log_update_generic();
+
+CREATE TRIGGER trigger_delete_areas
+AFTER DELETE ON Areas
+FOR EACH ROW
+EXECUTE FUNCTION log_delete_generic();
