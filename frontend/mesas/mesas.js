@@ -127,9 +127,9 @@ function updateSelectedItemsList() {
 }
 
 function submitOrder() {
-    const idCuenta = document.getElementById('idCuenta').value;
+    const idCuenta = parseInt(document.getElementById('idCuenta').value);
     const detalles = pedidoActual.map(item => ({
-        idItem: item.idItem,
+        idItem: parseInt(item.idItem),
         cantidad: item.cantidad
     }));
 
