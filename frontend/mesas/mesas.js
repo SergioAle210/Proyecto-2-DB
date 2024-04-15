@@ -105,7 +105,14 @@ function addSelectedItem() {
     const itemName = select.options[select.selectedIndex].text;
     const existingItemIndex = pedidoActual.findIndex(item => item.idItem === idItem);
     
-    pedidoActual.push({ idItem, itemName, cantidad });
+    if (existingItemIndex !== -1) {
+        // El ítem ya existe en el pedido, incrementa la cantidad
+        pedidoActual[existingItemIndex].cantidad += 1;
+    } else {
+        // El ítem es nuevo en el pedido, añádelo
+        pedidoActual.push({ idItem, itemName, cantidad: 1 });
+    }
+
     updateSelectedItemsList();
 }
 
