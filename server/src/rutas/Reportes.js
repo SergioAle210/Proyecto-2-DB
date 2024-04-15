@@ -87,7 +87,7 @@ router.get('/reporte-quejas-empleados/:fechaInicio/:fechaFin', async (req, res) 
 
     // Consulta SQL para obtener el reporte de quejas por empleado
     const result = await pool.query(
-      `SELECT e.nombre AS nombre_empleado,
+      `SELECT DISTINCT e.nombre AS nombre_empleado,
               q.motivo,
               e.rol
        FROM quejas q
@@ -113,7 +113,7 @@ router.get('/reporte-quejas-items/:fechaInicio/:fechaFin', async (req, res) => {
 
     // Consulta SQL para obtener el reporte de quejas agrupadas por plato
     const result = await pool.query(
-      `SELECT i.nombre AS nombre_plato,
+      `SELECT DISTINCT i.nombre AS nombre_plato,
               q.motivo
        FROM Quejas q
        JOIN Items i ON q.ID_Item = i.ID_Item
