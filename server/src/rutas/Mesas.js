@@ -31,7 +31,7 @@ const abrirCuenta = async (req, res) => {
     }
 
     const nuevaCuenta = await pool.query(
-      'INSERT INTO cuentas (id_mesa, estado, fecha_apertura) VALUES ($1, \'abierta\', NOW()) RETURNING *',
+      'INSERT INTO cuentas (id_mesa, id_empleado, estado, fecha_apertura) VALUES ($1, 2, \'abierta\', NOW()) RETURNING *',
       [idMesa]
     );
 
