@@ -150,6 +150,8 @@ function submitOrder(event) {
         cantidad: item.cantidad
     }));
 
+    console.log('Sending order with details:', { idCuenta, detalles }); // Agregar para depuración
+
     fetch('http://localhost:3000/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,7 +165,7 @@ function submitOrder(event) {
     })
     .then(data => {
         console.log('Pedido añadido:', data);
-        alert('Pedido enviado correctamente y factura generada!');
+        alert('Pedido enviado correctamente y resumen generado!');
         pedidoActual = [];  // Limpiar el pedido actual
         updateSelectedItemsList();
         closeOrderModal(); // Cerrar modal si está abierto
@@ -174,6 +176,7 @@ function submitOrder(event) {
         alert('Error al enviar el pedido: ' + error.message);
     });
 }
+
 
 function closeOrderModal() {
     document.getElementById('addOrderModal').style.display = 'none';
