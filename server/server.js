@@ -13,8 +13,14 @@ const rutaMesas = require('./src/rutas/Mesas');
 const rutaFactura = require('./src/rutas/Factura');
 const rutaPedidos = require('./src/rutas/Pedidos');
 const rutaReportes = require('./src/rutas/Reportes');
+<<<<<<< Updated upstream
 const rutaFeedback = require('./src/rutas/Feedback');
 const rutaBar = require('./src/rutas/Bar');
+=======
+
+const rutaItems = require('./src/rutas/items');
+
+>>>>>>> Stashed changes
 
 app.use(express.json()); // Middleware para parsear JSON
 app.use(cors()); //
@@ -26,8 +32,12 @@ app.use('/api/pedidos', rutaPedidos);
 app.use('/api/facturas', rutaFactura);
 app.use('/api/reportes', rutaReportes);
 app.use('/api/feedback', rutaFeedback);
+<<<<<<< Updated upstream
 app.use('/api/bar', rutaBar);
 
+=======
+app.use('/api/items', rutaItems);
+>>>>>>> Stashed changes
 
 app.get('/test-db', (req, res) => {
     // Replace this with your actual database testing logic

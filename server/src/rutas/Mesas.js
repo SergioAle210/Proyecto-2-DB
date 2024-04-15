@@ -22,24 +22,28 @@ const mesas = async (req, res) => {
 const abrirCuenta = async (req, res) => {
   const idMesa = req.params.id_mesa;
   try {
-    // Verificar si ya existe una cuenta abierta
+    await pool.query('BEGIN'); // Iniciar transacción
+
     const cuentaExistente = await pool.query('SELECT * FROM cuentas WHERE id_mesa = $1 AND estado = \'abierta\'', [idMesa]);
     if (cuentaExistente.rows.length > 0) {
-      return res.status(400).json({ message: 'Ya existe una cuenta abierta para esta mesa.', cuenta: cuentaExistente.rows[0]});
+      await pool.query('ROLLBACK'); // Revertir transacción si ya existe una cuenta abierta
+      return res.status(400).json({ message: 'Ya existe una cuenta abierta para esta mesa.' });
     }
 
-    // Abrir nueva cuenta y actualizar el estado de la mesa a 'ocupada'
-    await pool.query('BEGIN');
     const nuevaCuenta = await pool.query(
       'INSERT INTO cuentas (id_mesa, estado, fecha_apertura) VALUES ($1, \'abierta\', NOW()) RETURNING *',
       [idMesa]
     );
-    await pool.query('UPDATE mesas SET estado = \'ocupada\' WHERE id_mesa = $1', [idMesa]);
-    await pool.query('COMMIT');
 
+    await pool.query(
+      'UPDATE mesas SET estado = \'ocupada\' WHERE id_mesa = $1',
+      [idMesa]
+    );
+
+    await pool.query('COMMIT'); // Confirmar transacción
     res.status(201).json({ message: 'Cuenta abierta y mesa ocupada exitosamente.', cuenta: nuevaCuenta.rows[0] });
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await pool.query('ROLLBACK'); // Revertir transacción en caso de error
     console.error('Error al abrir la cuenta de la mesa:', error);
     res.status(500).json({ message: 'Error al abrir la cuenta de la mesa', error });
   }
@@ -50,25 +54,34 @@ const abrirCuenta = async (req, res) => {
 
 const cerrarCuenta = async (req, res) => {
   const idCuenta = req.params.id_cuenta;
-  if (!idCuenta) {
-    return res.status(400).send('El ID de la cuenta no se ha proporcionado');
-  }
   try {
+    await pool.query('BEGIN'); // Iniciar transacción
+
     const cuentaActualizada = await pool.query(
       'UPDATE cuentas SET estado = \'cerrada\', fecha_cierre = NOW() WHERE id_cuenta = $1 RETURNING *',
       [idCuenta]
     );
 
-    if (cuentaActualizada.rows.length > 0) {
-      res.json(cuentaActualizada.rows[0]);
-    } else {
-      res.status(404).send('Cuenta no encontrada o ya está cerrada.');
+    if (cuentaActualizada.rows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).send('Cuenta no encontrada o ya está cerrada.');
     }
+
+    await pool.query(
+      'UPDATE mesas SET estado = \'disponible\' WHERE id_mesa = (SELECT id_mesa FROM cuentas WHERE id_cuenta = $1)',
+      [idCuenta]
+    );
+
+    await pool.query('COMMIT');
+    res.json(cuentaActualizada.rows[0]);
   } catch (error) {
-    console.error(error);
+    await pool.query('ROLLBACK');
+    console.error('Error al cerrar la cuenta de la mesa:', error);
     res.status(500).send('Error al cerrar la cuenta de la mesa');
   }
 };
+
+
 
 // Rutas
 router.get('/', mesas);

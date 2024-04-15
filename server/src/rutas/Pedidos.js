@@ -5,6 +5,9 @@ const pool = require('../../conn');
 // Controladores
 const tomarNuevoPedido = async (req, res) => {
   const { idCuenta, detalles } = req.body;
+  if (!Number.isInteger(idCuenta)) {
+    return res.status(400).json({ error: "Invalid idCuenta, must be an integer." });
+  }
   try {
     const resultadoPedido = await pool.query(
       'INSERT INTO pedidos (id_cuenta, fecha_hora_pedido) VALUES ($1, NOW()) RETURNING *',
@@ -25,7 +28,7 @@ const tomarNuevoPedido = async (req, res) => {
       detalles: detallesResultados
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error al tomar el pedido:', error);
     res.status(500).send('Error al tomar el pedido');
   }
 };

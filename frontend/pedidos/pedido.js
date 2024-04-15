@@ -1,37 +1,42 @@
-// Función para crear un pedido
-document.getElementById('crearPedidoForm').addEventListener('submit', function(event) {
+document.getElementById('addOrderForm').addEventListener('submit', function(event) {
     event.preventDefault();
     const idCuenta = document.getElementById('idCuenta').value;
-    const detalles = document.getElementById('detalles').value;
+    const idItem = document.getElementById('idItem').value;
+    const cantidad = document.getElementById('cantidad').value;
 
-    // Aquí debes ajustar el objeto pedidoData según tu modelo de datos
     const pedidoData = {
         idCuenta: idCuenta,
-        // Suponiendo que detalles es un array de objetos con idItem y cantidad
-        detalles: JSON.parse(detalles)
+        detalles: [{
+            idItem: idItem,
+            cantidad: cantidad
+        }]
     };
 
     fetch('http://localhost:3000/api/pedidos', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(pedidoData),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(pedidoData)
     })
     .then(response => response.json())
-    .then(data => alert('Pedido creado con éxito: ' + JSON.stringify(data)))
-    .catch(error => alert('Error al crear pedido: ' + error));
+    .then(data => alert('Pedido añadido exitosamente.'))
+    .catch(error => alert('Error al añadir pedido: ' + error.message));
 });
 
-// Función para obtener el detalle de un pedido
-function obtenerDetallePedido() {
-    const idPedido = document.getElementById('idPedido').value;
-
+function fetchOrderDetails(idPedido) {
     fetch(`http://localhost:3000/api/pedidos/${idPedido}`)
     .then(response => response.json())
     .then(data => {
-        const detallesDiv = document.getElementById('detallesPedido');
-        detallesDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        const detailsContainer = document.getElementById('orderDetails');
+        detailsContainer.innerHTML = `
+            <p>ID Pedido: ${data.pedido.id_pedido}</p>
+            <p>Fecha y Hora: ${new Date(data.pedido.fecha_hora_pedido).toLocaleString()}</p>
+            <div>
+                ${data.detalles.map(det => `
+                    <p>Ítem: ${det.id_item}, Cantidad: ${det.cantidad}</p>
+                `).join('')}
+            </div>
+        `;
     })
-    .catch(error => alert('Error al obtener los detalles del pedido: ' + error));
+    .catch(error => console.error('Error al cargar detalles del pedido:', error));
 }
+

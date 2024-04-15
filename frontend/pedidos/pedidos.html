@@ -1,14 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es"> <!-- Cambio de idioma a español -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="pedidos.css" /> <!-- Asegúrate de que el archivo CSS existe -->
     <title>Pedidos</title>
-
-    <button><a href="crear_pedido.html">Crear Pedido</a></button>
-    <button><a href="detalle_pedido.html">Detalles de Pedido</a></buttin>
 </head>
 <body>
+    <h2>Añadir Pedido a Cuenta Abierta</h2>
+    <form id="addOrderForm">
+        <label for="idCuenta">ID de la Cuenta:</label>
+        <input type="number" id="idCuenta" required>
     
+        <label for="idItem">ID del Ítem:</label>
+        <input type="number" id="idItem" required>
+    
+        <label for="cantidad">Cantidad:</label>
+        <input type="number" id="cantidad" required>
+    
+        <button type="submit">Agregar Pedido</button>
+    </form>
+
+    <h2>Detalles de Pedidos Actuales y Pasados</h2>
+    <div id="orderDetails"></div>
+
+    <script src="pedido.js"></script> <!-- Asegúrate de que el archivo JS está correctamente enlazado -->
 </body>
 </html>

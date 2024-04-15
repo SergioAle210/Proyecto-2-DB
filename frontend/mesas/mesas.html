@@ -11,7 +11,40 @@
         <h1>Table Management</h1>
     </header>
     <section id="tableContainer"></section>
+
+<!-- Dentro de <body> después de tus otras secciones -->
+
+    <!-- Modal para añadir pedidos -->
+<!-- Modal para añadir pedidos -->
+<div id="addOrderModal" style="display:none;">
+    <h2>Añadir Pedido</h2>
+    <form id="addOrderForm">
+        <input type="hidden" id="idCuenta" name="idCuenta">
+        <label for="itemSelect">Selecciona un ítem:</label>
+        <select id="itemSelect"></select>
+        <button type="button" onclick="addSelectedItem()">Añadir a la Orden</button>
+        <div id="selectedItemsContainer">
+            <ul id="selectedItemsList"></ul>
+        </div>
+        <button type="button" onclick="submitOrder()">Finalizar y Enviar Pedido</button>
+        <!-- Modal para revisar y enviar el pedido -->
+        <div id="reviewOrderModal" style="display:none;">
+            <h2>Revisar Pedido</h2>
+            <div>
+                <h4>Pedido Actual</h4>
+                <ul id="orderReviewList"></ul> <!-- Aquí se mostrarán los detalles del pedido -->
+                <button id="sendOrderBtn">Enviar Pedido y Generar Factura</button>
+                <button onclick="closeReviewModal()">Cerrar</button>
+            </div>
+        </div>
+
+        <button type="button" onclick="closeOrderModal()">Cerrar</button>
+    </form>
+</div>
+
+    
     <script src="mesas.js"></script>
+
 </body>
 </html>
 

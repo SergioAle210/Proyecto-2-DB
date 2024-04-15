@@ -47,4 +47,24 @@ button:hover {
     background-color: #003d82;
 }
 
+.form-container {
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+}
+
+#itemSelect {
+    height: auto;
+    width: auto; /* Auto width based on content */
+    min-width: 200px; /* Minimum width */
+    max-width: 100%; /* Maximum width to prevent overflow */
+    padding: 5px; /* Adds space inside the box around the text */
+    font-size: 1em; /* Makes the text larger and easier to read */
+    z-index: 1000;
+    align-items: center;
+}
+
+#itemSelect option {
+color: #000;
+}
+
 /* Agregar cualquier otro estilo que necesites aquí */
