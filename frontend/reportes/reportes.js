@@ -1,7 +1,7 @@
 // reporte de los platos mas pedidos 
 function obtenerReportePlatosMasPedidos() {
-    const fechaInicio = document.getElementById('fechaInicio').value;
-    const fechaFin = document.getElementById('fechaFin').value;
+    const fechaInicio = formatearFecha(document.getElementById('fechaInicioPlatos').value);
+    const fechaFin = formatearFecha(document.getElementById('fechaFinPlatos').value);
 
     fetch(`http://localhost:3000/api/reportes/platos-mas-pedidos/${fechaInicio}/${fechaFin}`)
     .then(response => {
@@ -25,8 +25,8 @@ function obtenerReportePlatosMasPedidos() {
 }
 
 function obtenerReporteHorarioMasPedidos() {
-    const fechaInicio = document.getElementById('fechaInicioHorario').value;
-    const fechaFin = document.getElementById('fechaFinHorario').value;
+    const fechaInicio = formatearFecha(document.getElementById('fechaInicioHorario').value);
+    const fechaFin = formatearFecha(document.getElementById('fechaFinHorario').value);
     
     fetch(`http://localhost:3000/api/reportes/horario-pedidos-mas-ingresados/${fechaInicio}/${fechaFin}`)
     .then(response => {
@@ -40,7 +40,7 @@ function obtenerReporteHorarioMasPedidos() {
         const reporteHorarioMasPedidosDiv = document.getElementById('reporteHorarioMasPedidos');
         reporteHorarioMasPedidosDiv.innerHTML = ''; // Limpiar el contenido anterior
         data.forEach(item => {
-            reporteHorarioMasPedidosDiv.innerHTML += `<p>${item.hora}: ${item.total_pedidos}</p>`;
+            reporteHorarioMasPedidosDiv.innerHTML += `<p>El horario ${item.hora} tiene una cantidad de ${item.total_pedidos} items pedidos</p>`;
         });
     })
     .catch(error => {
@@ -50,8 +50,8 @@ function obtenerReporteHorarioMasPedidos() {
 }
 
 function obtenerReportePromedioTiempoComida() {
-    const fechaInicio = document.getElementById('fechaInicioTiempoComida').value;
-    const fechaFin = document.getElementById('fechaFinTiempoComida').value;
+    const fechaInicio = formatearFecha(document.getElementById('fechaInicioTiempoComida').value);
+    const fechaFin = formatearFecha(document.getElementById('fechaFinTiempoComida').value);
     
     fetch(`http://localhost:3000/api/reportes/promedio-tiempo-comida/${fechaInicio}/${fechaFin}`)
     .then(response => {
@@ -65,7 +65,9 @@ function obtenerReportePromedioTiempoComida() {
         const reportePromedioTiempoComidaDiv = document.getElementById('reportePromedioTiempoComida');
         reportePromedioTiempoComidaDiv.innerHTML = ''; // Limpiar el contenido anterior
         data.forEach(item => {
-            reportePromedioTiempoComidaDiv.innerHTML += `<p>${item.capacidad}: ${item.tiempo_promedio}</p>`;
+            const horas = Math.floor(item.horas); // Redondear las horas hacia abajo
+            const minutos = Math.round(item.minutos); // Redondear los minutos al entero más cercano
+            reportePromedioTiempoComidaDiv.innerHTML += `<p>${item.capacidad} personas ha estado un promedio de ${horas} horas con ${minutos} minutos</p>`;
         });
     })
     .catch(error => {
@@ -75,10 +77,10 @@ function obtenerReportePromedioTiempoComida() {
 }
 
 function obtenerReporteQuejasPorEmpleado() {
-    const fechaInicio = document.getElementById('fechaInicioQuejasEmpleado').value;
-    const fechaFin = document.getElementById('fechaFinQuejasEmpleado').value;
+    const fechaInicio = formatearFecha(document.getElementById('fechaInicioQuejasEmpleado').value);
+    const fechaFin = formatearFecha(document.getElementById('fechaFinQuejasEmpleado').value);
     
-    fetch(`http://localhost:3000/api/reportes/quejas-por-empleado/${fechaInicio}/${fechaFin}`)
+    fetch(`http://localhost:3000/api/reportes/reporte-quejas-empleados/${fechaInicio}/${fechaFin}`)
     .then(response => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -96,10 +98,10 @@ function obtenerReporteQuejasPorEmpleado() {
 }
 
 function obtenerReporteQuejasPorPlato() {
-    const fechaInicio = document.getElementById('fechaInicioQuejasPlato').value;
-    const fechaFin = document.getElementById('fechaFinQuejasPlato').value;
+    const fechaInicio = formatearFecha(document.getElementById('fechaInicioQuejasPlato').value);
+    const fechaFin = formatearFecha(document.getElementById('fechaFinQuejasPlato').value);
     
-    fetch(`http://localhost:3000/api/reportes/quejas-por-plato/${fechaInicio}/${fechaFin}`)
+    fetch(`http://localhost:3000/api/reportes/reporte-quejas-items/${fechaInicio}/${fechaFin}`)
     .then(response => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -130,7 +132,7 @@ function obtenerReporteEficienciaMeseros() {
         const reporteEficienciaMeserosDiv = document.getElementById('reporteEficienciaMeseros');
         reporteEficienciaMeserosDiv.innerHTML = ''; // Limpiar el contenido anterior
         data.forEach(item => {
-            reporteEficienciaMeserosDiv.innerHTML += `<p>En el mes y año ${item.mes} El mesero ${item.nombre_mesero} tiene una eficiencia promedio de ${item.promedio_clasificacion}</p>`;
+            reporteEficienciaMeserosDiv.innerHTML += `<p>En el mes y año ${item.mes} El mesero ${item.nombre_mesero} tiene una amabilidad de ${item.promedio_amabilidad} y una exactitud de ${item.promedio_exactitud}</p>`;
         });
     })
     .catch(error => {
@@ -149,3 +151,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+function formatearFecha(fecha) {
+    const fechaObj = new Date(fecha);
+    const año = fechaObj.getFullYear();
+    const mes = fechaObj.getMonth() + 1 < 10 ? '0' + (fechaObj.getMonth() + 1) : fechaObj.getMonth() + 1;
+    const dia = fechaObj.getDate() < 10 ? '0' + fechaObj.getDate() : fechaObj.getDate();
+    return `${año}-${mes}-${dia}`;
+}
