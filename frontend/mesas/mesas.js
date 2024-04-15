@@ -189,7 +189,7 @@ function submitOrder(event) {
     });
 }
 function fetchOrderDetails(idPedido) {
-    fetch(`http://localhost:3000/api/pedidos/'/:id_pedido'`)
+    fetch(`http://localhost:3000/api/pedidos/${idPedido}/detalles`)
     .then(response => response.ok ? response.json() : Promise.reject(`Failed to fetch order details, status: ${response.status}`))
     .then(detalles => {
         console.log('Detalles del pedido:', detalles);
