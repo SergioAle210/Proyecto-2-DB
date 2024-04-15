@@ -232,3 +232,54 @@ CREATE TRIGGER trigger_log_estado_pedido
 AFTER UPDATE OF estado ON pedidos
 FOR EACH ROW
 EXECUTE FUNCTION log_estado_pedido();
+
+CREATE TABLE Auditoria (
+    ID_Auditoria SERIAL PRIMARY KEY,
+    Tabla_Afectada VARCHAR(255) NOT NULL,
+    Tipo_Operacion VARCHAR(10) NOT NULL CHECK (Tipo_Operacion IN ('INSERT', 'UPDATE', 'DELETE')),
+    ID_Registro INTEGER,
+    Detalles TEXT,
+    Fecha_Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION log_insert_usuarios()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
+    VALUES ('Usuarios', 'INSERT', NEW.ID_Usuario, row_to_json(NEW)::text);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_insert_usuarios
+AFTER INSERT ON Usuarios
+FOR EACH ROW
+EXECUTE FUNCTION log_insert_usuarios();
+
+CREATE OR REPLACE FUNCTION log_update_usuarios()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
+    VALUES ('Usuarios', 'UPDATE', NEW.ID_Usuario, ('Antes:' || row_to_json(OLD)::text || ', Después:' || row_to_json(NEW)::text));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_usuarios
+AFTER UPDATE ON Usuarios
+FOR EACH ROW
+EXECUTE FUNCTION log_update_usuarios();
+
+CREATE OR REPLACE FUNCTION log_delete_usuarios()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
+    VALUES ('Usuarios', 'DELETE', OLD.ID_Usuario, row_to_json(OLD)::text);
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_delete_usuarios
+AFTER DELETE ON Usuarios
+FOR EACH ROW
+EXECUTE FUNCTION log_delete_usuarios();
