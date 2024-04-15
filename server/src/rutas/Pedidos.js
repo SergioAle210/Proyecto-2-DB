@@ -4,10 +4,13 @@ const pool = require('../../conn');
 
 // Controladores
 const tomarNuevoPedido = async (req, res) => {
-  const { idCuenta, detalles } = req.body;
+  let { idCuenta, detalles } = req.body;
+  idCuenta = parseInt(idCuenta);  // Convertir idCuenta a entero
+
   if (!Number.isInteger(idCuenta)) {
     return res.status(400).json({ error: "Invalid idCuenta, must be an integer." });
   }
+
   try {
     const resultadoPedido = await pool.query(
       'INSERT INTO pedidos (id_cuenta, fecha_hora_pedido, estado) VALUES ($1, NOW(), $2) RETURNING *',
@@ -37,15 +40,35 @@ const tomarNuevoPedido = async (req, res) => {
 const obtenerDetallesPedido = async (req, res) => {
   const { id_pedido } = req.params;
   try {
-    const resultadoPedido = await pool.query('SELECT * FROM pedidos WHERE id_pedido = $1', [id_pedido]);
-    const resultadoDetalles = await pool.query('SELECT * FROM detalle_pedido WHERE id_pedido = $1', [id_pedido]);
+    // Primero obtiene los detalles del pedido basado en id_pedido
+    const resultadoPedido = await pool.query(
+      'SELECT * FROM pedidos WHERE id_pedido = $1',
+      [id_pedido]
+    );
 
+    // Comprueba si el pedido existe antes de intentar obtener más detalles
+    if (resultadoPedido.rows.length === 0) {
+      return res.status(404).json({ error: "Pedido no encontrado." });
+    }
+
+    // Si el pedido existe, obtiene los detalles asociados a ese pedido
+    const resultadoDetalles = await pool.query(
+      'SELECT * FROM detalle_pedido WHERE id_pedido = $1',
+      [id_pedido]
+    );
+
+    console.log('Detalles del pedido:', {
+      pedido: resultadoPedido.rows[0],
+      detalles: resultadoDetalles.rows
+    });
+
+    // Enviar respuesta con los datos del pedido y sus detalles
     res.json({
       pedido: resultadoPedido.rows[0],
       detalles: resultadoDetalles.rows
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error al obtener los detalles del pedido:', error);
     res.status(500).send('Error al obtener los detalles del pedido');
   }
 };

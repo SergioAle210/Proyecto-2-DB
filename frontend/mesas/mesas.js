@@ -114,16 +114,19 @@ let pedidoActual = [];  // Array para mantener los ítems seleccionados
 
 function addSelectedItem() {
     const select = document.getElementById('itemSelect');
-    const idItem = select.value;
+    const idItem = select.value;  // Asegúrate de que esto no está undefined
     const itemName = select.options[select.selectedIndex].text;
-    const cantidad = 1;  // Asumiendo una cantidad fija; puedes modificar esto según sea necesario
+    const cantidad = 1;
 
-    // Añadir al arreglo de pedidoActual
+    if (!idItem) {
+        console.error('No item ID selected');
+        return;  // No añadir al pedido si idItem es undefined
+    }
+
     pedidoActual.push({ idItem, itemName, cantidad });
-    
-    // Actualizar la lista visual de ítems seleccionados
     updateSelectedItemsList();
 }
+
 
 function updateSelectedItemsList() {
     const lista = document.getElementById('selectedItemsList');
