@@ -16,6 +16,7 @@ const rutaReportes = require('./src/rutas/Reportes');
 const rutaFeedback = require('./src/rutas/Feedback');
 const rutaBar = require('./src/rutas/Bar');
 const rutaItems = require('./src/rutas/items');
+const rutaCocina = require('./src/rutas/Cocina');
 
 app.use(express.json()); // Middleware para parsear JSON
 app.use(cors()); //
@@ -29,6 +30,7 @@ app.use('/api/reportes', rutaReportes);
 app.use('/api/feedback', rutaFeedback);
 app.use('/api/bar', rutaBar);
 app.use('/api/items', rutaItems);
+app.use('/api/cocina', rutaCocina);
 
 app.get('/test-db', (req, res) => {
     // Replace this with your actual database testing logic
