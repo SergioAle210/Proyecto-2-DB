@@ -218,69 +218,100 @@ FOR EACH ROW
 WHEN (NEW.estado = 'cerrado')
 EXECUTE FUNCTION calculate_tip();
 
-
-CREATE OR REPLACE FUNCTION log_estado_pedido() 
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO log_pedidos(id_pedido, estado_anterior, estado_nuevo, fecha_cambio)
-    VALUES (NEW.id_pedido, OLD.estado, NEW.estado, NOW());
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_log_estado_pedido
-AFTER UPDATE OF estado ON pedidos
-FOR EACH ROW
-EXECUTE FUNCTION log_estado_pedido();
-
-CREATE TABLE Auditoria (
-    ID_Auditoria SERIAL PRIMARY KEY,
-    Tabla_Afectada VARCHAR(255) NOT NULL,
-    Tipo_Operacion VARCHAR(10) NOT NULL CHECK (Tipo_Operacion IN ('INSERT', 'UPDATE', 'DELETE')),
-    ID_Registro INTEGER,
-    Detalles TEXT,
-    Fecha_Hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE bitacora (
+	id SERIAL PRIMARY KEY,
+	fechahora TIMESTAMP NOT NULL DEFAULT NOW(),
+	accion VARCHAR NOT NULL,
+	nombre_tabla VARCHAR NOT NULL
 );
 
-CREATE OR REPLACE FUNCTION log_insert_generic()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION registro_movimientos()
+RETURNS TRIGGER AS 
+$BODY$
 BEGIN
-    INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
-    VALUES (TG_TABLE_NAME, 'INSERT', NEW.id, row_to_json(NEW)::text);
-    RETURN NEW;
+	INSERT INTO bitacora(accion, nombre_tabla)
+	VALUES (TG_OP, TG_TABLE_NAME);
+
+	RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$BODY$
+LANGUAGE 'plpgsql';
 
-CREATE OR REPLACE FUNCTION log_update_generic()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
-    VALUES (TG_TABLE_NAME, 'UPDATE', NEW.id, ('Antes:' || row_to_json(OLD)::text || ', Después:' || row_to_json(NEW)::text));
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Usuarios
+CREATE TRIGGER movimientos_usuarios
+AFTER INSERT OR UPDATE OR DELETE 
+ON Usuarios
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
 
-CREATE OR REPLACE FUNCTION log_delete_generic()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO Auditoria (Tabla_Afectada, Tipo_Operacion, ID_Registro, Detalles)
-    VALUES (TG_TABLE_NAME, 'DELETE', OLD.id, row_to_json(OLD)::text);
-    RETURN OLD;
-END;
-$$ LANGUAGE plpgsql;
+-- Areas
+CREATE TRIGGER movimientos_areas
+AFTER INSERT OR UPDATE OR DELETE 
+ON Areas
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
 
--- Triggers para la tabla Áreas
-CREATE TRIGGER trigger_insert_areas
-AFTER INSERT ON Areas
-FOR EACH ROW
-EXECUTE FUNCTION log_insert_generic();
+-- Mesas
+CREATE TRIGGER movimientos_mesas
+AFTER INSERT OR UPDATE OR DELETE 
+ON Mesas
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
 
-CREATE TRIGGER trigger_update_areas
-AFTER UPDATE ON Areas
-FOR EACH ROW
-EXECUTE FUNCTION log_update_generic();
+-- Cuentas
+CREATE TRIGGER movimientos_cuentas
+AFTER INSERT OR UPDATE OR DELETE 
+ON Cuentas
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
 
-CREATE TRIGGER trigger_delete_areas
-AFTER DELETE ON Areas
-FOR EACH ROW
-EXECUTE FUNCTION log_delete_generic();
+-- Pedidos
+CREATE TRIGGER movimientos_pedidos
+AFTER INSERT OR UPDATE OR DELETE 
+ON Pedidos
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+-- Platos y Bebidas (Items)
+CREATE TRIGGER movimientos_items
+AFTER INSERT OR UPDATE OR DELETE 
+ON Items
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+-- Detalle_Pedido
+CREATE TRIGGER movimientos_detalle_pedido
+AFTER INSERT OR UPDATE OR DELETE 
+ON Detalle_Pedido
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+-- Facturas
+CREATE TRIGGER movimientos_facturas
+AFTER INSERT OR UPDATE OR DELETE 
+ON Facturas
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+-- Pagos
+CREATE TRIGGER movimientos_pagos
+AFTER INSERT OR UPDATE OR DELETE 
+ON Pagos
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+-- Encuestas
+CREATE TRIGGER movimientos_encuestas
+AFTER INSERT OR UPDATE OR DELETE 
+ON Encuestas
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+-- Quejas
+CREATE TRIGGER movimientos_quejas
+AFTER INSERT OR UPDATE OR DELETE 
+ON Quejas
+FOR EACH ROW 
+EXECUTE PROCEDURE registro_movimientos();
+
+SELECT * FROM bitacora;
