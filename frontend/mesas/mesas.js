@@ -51,11 +51,13 @@ function fetchTables() {
 function setupEventListeners() {
     const addOrderForm = document.getElementById('addOrderForm');
     if (addOrderForm) {
-        addOrderForm.addEventListener('submit', handleOrderSubmit);
+        // Aquí cambiamos handleOrderSubmit por submitOrder
+        addOrderForm.addEventListener('submit', submitOrder);
     } else {
         console.error('AddOrderForm not found');
     }
 }
+
 
 function openAccount(id_mesa) {
     fetch(`http://localhost:3000/api/mesas/${id_mesa}/abrir-cuenta`, { method: 'POST' })
@@ -88,6 +90,7 @@ function openOrderModal(idCuenta) {
     fetchItems();
     document.getElementById('addOrderModal').style.display = 'block';
 }
+
 
 function fetchItems() {
     fetch('http://localhost:3000/api/items')
@@ -133,29 +136,51 @@ function updateSelectedItemsList() {
         lista.appendChild(itemElement);
     });
 }
-
-function submitOrder() {
+function setupEventListeners() {
+    const addOrderForm = document.getElementById('addOrderForm');
+    if (addOrderForm) {
+        addOrderForm.addEventListener('submit', submitOrder);
+    }
+}
+function submitOrder(event) {
+    event.preventDefault();
     const idCuenta = document.getElementById('idCuenta').value;
-    
-    // Send all items in the current order as a single order
+    const detalles = pedidoActual.map(item => ({
+        idItem: item.idItem,
+        cantidad: item.cantidad
+    }));
+
     fetch('http://localhost:3000/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idCuenta, detalles: pedidoActual })
+        body: JSON.stringify({ idCuenta, detalles })
     })
-    .then(response => response.ok ? response.json() : Promise.reject('Failed to submit order'))
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Failed to submit order with status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        alert('Order submitted successfully!');
-        console.log(data);
-        pedidoActual = [];  // Clear the current order
+        console.log('Pedido añadido:', data);
+        alert('Pedido enviado correctamente y factura generada!');
+        pedidoActual = [];  // Limpiar el pedido actual
         updateSelectedItemsList();
-        closeOrderModal();
+        closeOrderModal(); // Cerrar modal si está abierto
+        fetchTables(); // Refresca la lista de mesas para actualizar estados
     })
     .catch(error => {
-        console.error('Error submitting order:', error);
-        alert('Error submitting order: ' + error);
+        console.error('Error al enviar el pedido:', error);
+        alert('Error al enviar el pedido: ' + error.message);
     });
 }
+
+function closeOrderModal() {
+    document.getElementById('addOrderModal').style.display = 'none';
+}
+
+
+
 
 function closeOrderModal() {
     document.getElementById('addOrderModal').style.display = 'none';

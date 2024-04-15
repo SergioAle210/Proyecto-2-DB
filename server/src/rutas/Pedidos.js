@@ -10,8 +10,8 @@ const tomarNuevoPedido = async (req, res) => {
   }
   try {
     const resultadoPedido = await pool.query(
-      'INSERT INTO pedidos (id_cuenta, fecha_hora_pedido) VALUES ($1, NOW()) RETURNING *',
-      [idCuenta]
+      'INSERT INTO pedidos (id_cuenta, fecha_hora_pedido, estado) VALUES ($1, NOW(), $2) RETURNING *',
+      [idCuenta, 'pending']  // Asumimos que el estado inicial es 'pending'
     );
 
     const idPedido = resultadoPedido.rows[0].id_pedido;
@@ -32,6 +32,7 @@ const tomarNuevoPedido = async (req, res) => {
     res.status(500).send('Error al tomar el pedido');
   }
 };
+
 
 const obtenerDetallesPedido = async (req, res) => {
   const { id_pedido } = req.params;
