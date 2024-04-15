@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchTables();
     setupEventListeners();
+    fetchMeseros();
 });
 
 function fetchTables() {
@@ -282,3 +283,18 @@ function displayInvoiceDetails(invoice) {
     document.getElementById('invoiceTotal').textContent = total.toFixed(2);
 }
 
+function fetchMeseros() {
+    fetch('http://localhost:3000/api/usuarios')
+        .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch waiters'))
+        .then(meseros => {
+            const select = document.getElementById('meseroSelect'); // Asegúrate de que este elemento exista en tu HTML
+            select.innerHTML = ''; // Limpiar opciones anteriores
+            meseros.forEach(mesero => {
+                const option = document.createElement('option');
+                option.value = mesero.id_usuario;
+                option.textContent = mesero.nombre;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching waiters:', error));
+}
