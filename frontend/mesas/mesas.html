@@ -56,8 +56,26 @@
           <input type="text" id="customerName" required />
           <label for="customerAddress">Dirección Cliente:</label>
           <input type="text" id="customerAddress" required />
-          <p><strong>Total:</strong> $<span id="invoiceTotal"></span></p>
-          <p><strong>Fecha:</strong> <span id="invoiceDate"></span></p>
+
+          <div id="paymentDetails">
+            <h3>Métodos de Pago</h3>
+            <div>
+              <label for="paymentMethod">Método de Pago:</label>
+              <select id="paymentMethod">
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <!-- Añadir más métodos de pago según sea necesario -->
+              </select>
+            </div>
+            <div>
+              <label for="paymentAmount">Monto:</label>
+              <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="Ingrese el monto" required>
+            </div>
+            <button type="button" onclick="addPayment()">Añadir Pago</button>
+          </div>
+          <!-- Aquí se añadirán los métodos de pago -->
+          <div id="addedPayments"></div>
+          
           <button type="button" onclick="submitInvoice()">
             Enviar Factura
           </button>

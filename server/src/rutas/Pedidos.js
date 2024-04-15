@@ -37,44 +37,26 @@ const tomarNuevoPedido = async (req, res) => {
 };
 
 
-const obtenerDetallesPedido = async (req, res) => {
+router.get('/:id_pedido/detalles', async (req, res) => {
   const { id_pedido } = req.params;
   try {
-    // Primero obtiene los detalles del pedido basado en id_pedido
-    const resultadoPedido = await pool.query(
-      'SELECT * FROM pedidos WHERE id_pedido = $1',
-      [id_pedido]
-    );
-
-    // Comprueba si el pedido existe antes de intentar obtener más detalles
-    if (resultadoPedido.rows.length === 0) {
-      return res.status(404).json({ error: "Pedido no encontrado." });
-    }
-
-    // Si el pedido existe, obtiene los detalles asociados a ese pedido
-    const resultadoDetalles = await pool.query(
-      `SELECT dp.id_item, i.nombre, dp.cantidad, i.precio
-       FROM detalle_pedido dp
-       JOIN items i ON dp.id_item = i.id_item
-       WHERE dp.id_pedido = $1;`,
-      [id_pedido]
-    );
-
-    console.log('Detalles del pedido:', {
-      pedido: resultadoPedido.rows[0],
-      detalles: resultadoDetalles.rows
-    });
-
-    // Enviar respuesta con los datos del pedido y sus detalles
-    res.json({
-      pedido: resultadoPedido.rows[0],
-      detalles: resultadoDetalles.rows
-    });
+      const resultado = await pool.query(
+          `SELECT dp.id_item, i.nombre, dp.cantidad, i.precio
+           FROM detalle_pedido dp
+           JOIN items i ON dp.id_item = i.id_item
+           WHERE dp.id_pedido = $1;`,
+          [id_pedido]
+      );
+      if (resultado.rows.length > 0) {
+          res.json(resultado.rows);
+      } else {
+          res.status(404).send('Detalles del pedido no encontrados.');
+      }
   } catch (error) {
-    console.error('Error al obtener los detalles del pedido:', error);
-    res.status(500).send('Error al obtener los detalles del pedido');
+      console.error('Error al obtener los detalles del pedido:', error);
+      res.status(500).send('Error interno del servidor');
   }
-};
+});
 
 const listarPedidosCocina = async (req, res) => {
   try {
@@ -102,7 +84,6 @@ const listarPedidosBar = async (req, res) => {
 
 // Rutas
 router.post('/', tomarNuevoPedido);
-router.get('/:id_pedido', obtenerDetallesPedido);
 router.get('/cocina', listarPedidosCocina);
 router.get('/bar', listarPedidosBar);
 

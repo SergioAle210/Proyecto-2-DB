@@ -1,12 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchTables();
     setupEventListeners();
-    fetchMeseros();
 });
 
 function fetchTables() {
     fetch('http://localhost:3000/api/mesas')
-        .then(response => response.ok ? response.json() : Promise.reject(`Network response was not ok, status: ${response.status}`))
+        .then(response => {
+            if (!response.ok) throw new Error(`Network response was not ok, status: ${response.status}`);
+            return response.json();
+        })
         .then(data => {
             const container = document.getElementById('tableContainer');
             container.innerHTML = '';
@@ -15,14 +17,11 @@ function fetchTables() {
                 return;
             }
             data.forEach(mesa => {
-                const puedeMover = mesa.area_puede_mover_mesas ? "sí" : "no";
-
                 const tableDiv = document.createElement('div');
                 tableDiv.className = 'table';
                 tableDiv.innerHTML = `
                     <h3>Mesa ${mesa.id_mesa} - Capacidad: ${mesa.capacidad}</h3>
                     <p>Status: ${mesa.estado}</p>
-                    <p>La mesa se encuentra en el area de <strong>${mesa.nombre_area}</strong>. La mesa de puede mover: ${puedeMover} </p>
                 `;
                 if (mesa.cuenta_estado === 'abierta' && mesa.id_cuenta) {
                     const closeButton = document.createElement('button');
@@ -40,7 +39,6 @@ function fetchTables() {
                     openButton.onclick = () => openAccount(mesa.id_mesa);
                     tableDiv.appendChild(openButton);
                 }
-
                 container.appendChild(tableDiv);
             });
         })
@@ -48,54 +46,49 @@ function fetchTables() {
 }
 
 function setupEventListeners() {
-    const addOrderForm = document.getElementById('addOrderForm');
-    if (addOrderForm) {
-        addOrderForm.addEventListener('submit', submitOrder);
-    } else {
-        // Este mensaje ayudará a identificar si el elemento no existe cuando se intenta añadir el listener.
-        console.error('AddOrderForm not found, cannot attach event listener');
-    }
+    document.getElementById('addOrderForm').addEventListener('submit', submitOrder);
 }
 
 function openAccount(id_mesa) {
-    const requestBody = JSON.stringify({ id_mesa });
-    console.log("Sending request to open account with data:", requestBody);
-
     fetch(`http://localhost:3000/api/mesas/${id_mesa}/abrir-cuenta`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: requestBody
+        body: JSON.stringify({ id_mesa })
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error(`Failed to open account with status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to open account with status: ${response.status}`);
         return response.json();
     })
     .then(data => {
         alert('Account opened successfully!');
-        fetchTables();  // Refresh the table list
+        fetchTables();
     })
     .catch(error => {
         console.error('Error opening account:', error);
-        alert('Failed to open account: ' + error);
+        alert('Failed to open account: ' + error.message);
     });
 }
 
-
-
 function closeAccount(id_cuenta) {
     fetch(`http://localhost:3000/api/mesas/cuentas/${id_cuenta}/cerrar`, { method: 'PUT' })
-        .then(response => response.ok ? response.json() : Promise.reject('Failed to close account'))
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to close account');
+            return response.json();
+        })
         .then(() => {
-            alert('Account closed successfully!');
+            alert('Account closed successfully.');
+            openInvoiceModal(id_cuenta);
             fetchTables();
         })
         .catch(error => {
             console.error('Error closing account:', error);
-            alert('Failed to close account: ' + error);
+            alert('Failed to close account: ' + error.message);
         });
-        openInvoiceModal(id_cuenta);
+}
+
+function openInvoiceModal(idCuenta) {
+    document.getElementById('invoiceAccountId').textContent = idCuenta;
+    document.getElementById('invoiceModal').style.display = 'block';
 }
 
 function openOrderModal(idCuenta) {
@@ -106,7 +99,10 @@ function openOrderModal(idCuenta) {
 
 function fetchItems() {
     fetch('http://localhost:3000/api/items')
-        .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch items'))
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch items');
+            return response.json();
+        })
         .then(items => populateItemSelect(items))
         .catch(error => console.error('Error fetching items:', error));
 }
@@ -122,64 +118,15 @@ function populateItemSelect(items) {
     });
 }
 
-let pedidoActual = [];
-
-function addSelectedItem() {
-    const select = document.getElementById('itemSelect');
-    const idItem = select.value;
-    const itemName = select.options[select.selectedIndex].text;
-    const existingItemIndex = pedidoActual.findIndex(item => item.idItem === idItem);
-    
-    if (existingItemIndex !== -1) {
-        // El ítem ya existe en el pedido, incrementa la cantidad
-        pedidoActual[existingItemIndex].cantidad += 1;
-    } else {
-        // El ítem es nuevo en el pedido, añádelo
-        pedidoActual.push({ idItem, itemName, cantidad: 1 });
-    }
-
-    updateSelectedItemsList();
-}
-function updateSelectedItemsList() {
-    const lista = document.getElementById('selectedItemsList');
-    lista.innerHTML = '';  // Clear current list
-
-    pedidoActual.forEach((item, index) => {
-        const itemElement = document.createElement('li');
-        itemElement.textContent = `${item.itemName} - Cantidad: `;
-
-        // Input para modificar cantidad
-        const quantityInput = document.createElement('input');
-        quantityInput.type = 'number';
-        quantityInput.min = '1';
-        quantityInput.value = item.cantidad;
-        quantityInput.style.width = '50px';
-
-      
-        // Botón para eliminar ítem
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Eliminar';
-        deleteButton.onclick = () => removeItem(index);  // Función para eliminar ítem
-        
-        itemElement.appendChild(quantityInput);
-        itemElement.appendChild(deleteButton);
-        lista.appendChild(itemElement);
-    });
-}
-
-
-function removeItem(index) {
-    pedidoActual.splice(index, 1);  // Elimina el ítem del array
-    updateSelectedItemsList();  // Actualiza la lista visual
-}
-
 function submitOrder(event) {
     event.preventDefault();
     const idCuenta = parseInt(document.getElementById('idCuenta').value);
-    const detalles = pedidoActual.map(item => ({
-        idItem: parseInt(item.idItem),
-        cantidad: item.cantidad
-    }));
+    const detalles = Array.from(document.querySelectorAll('#selectedItemsList li')).map(item => {
+        return {
+            idItem: item.dataset.idItem,
+            cantidad: parseInt(item.querySelector('input[type="number"]').value)
+        };
+    });
 
     fetch('http://localhost:3000/api/pedidos', {
         method: 'POST',
@@ -187,131 +134,44 @@ function submitOrder(event) {
         body: JSON.stringify({ idCuenta, detalles })
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error(`Failed to submit order with status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Failed to submit order with status: ${response.status}`);
         return response.json();
     })
     .then(data => {
         console.log('Pedido añadido:', data);
-        alert('Pedido enviado correctamente y resumen generado!');
-        pedidoActual = [];
-        updateSelectedItemsList();
+        alert('Pedido enviado correctamente!');
         closeOrderModal();
         fetchTables();
-        fetchOrderDetails(data.pedido.id_pedido);
     })
     .catch(error => {
-        console.error('Error al enviar el pedido:', error);
+        console.error('Error submitting order:', error);
         alert('Error al enviar el pedido: ' + error.message);
     });
 }
-function fetchOrderDetails(idPedido) {
-    fetch(`http://localhost:3000/api/pedidos/${idPedido}/detalles`)
-    .then(response => response.ok ? response.json() : Promise.reject(`Failed to fetch order details, status: ${response.status}`))
-    .then(detalles => {
-        console.log('Detalles del pedido:', detalles);
-        displayOrderDetails(detalles);
-    })
-    .catch(error => {
-        console.error('Error al obtener los detalles del pedido:', error);
-        alert('Error al obtener los detalles del pedido: ' + error.message);
-    });
-}
-
-function displayOrderDetails(detalles) {
-    const detallesContainer = document.getElementById('orderDetails'); // Asegúrate de que este elemento existe en tu HTML
-    detallesContainer.innerHTML = ''; // Limpiar detalles anteriores
-    detalles.forEach(detalle => {
-        const detalleElement = document.createElement('div');
-        detalleElement.innerHTML = `
-            <p>Ítem: ${detalle.nombre} - Cantidad: ${detalle.cantidad} - Precio unitario: $${detalle.precio.toFixed(2)} - Subtotal: $${(detalle.cantidad * detalle.precio).toFixed(2)}</p>
-        `;
-        detallesContainer.appendChild(detalleElement);
-    });
-}
-
-
 
 function closeOrderModal() {
     document.getElementById('addOrderModal').style.display = 'none';
 }
-function openInvoiceModal(idCuenta) {
-    document.getElementById('invoiceAccountId').value = idCuenta;
-    document.getElementById('invoiceModal').style.display = 'block';
+
+function addSelectedItem() {
+    const select = document.getElementById('itemSelect');
+    const idItem = select.value;
+    const itemName = select.options[select.selectedIndex].text;
+    const price = parseFloat(select.options[select.selectedIndex].textContent.split('- $')[1]);
+    const lista = document.getElementById('selectedItemsList');
+    let item = lista.querySelector(`li[data-id-item="${idItem}"]`);
+    if (item) {
+        let quantityInput = item.querySelector('input[type="number"]');
+        quantityInput.value = parseInt(quantityInput.value) + 1;
+    } else {
+        item = document.createElement('li');
+        item.dataset.idItem = idItem;
+        item.innerHTML = `${itemName} - $${price.toFixed(2)} <input type="number" value="1" min="1"> <button onclick="removeItem(this)">Eliminar</button>`;
+        lista.appendChild(item);
+    }
 }
 
-function closeInvoiceModal() {
-    document.getElementById('invoiceModal').style.display = 'none';
-}
-
-function submitInvoice() {
-    const idCuenta = document.getElementById('invoiceAccountId').value;
-    const nitCliente = document.getElementById('customerNIT').value;
-    const nombreCliente = document.getElementById('customerName').value;
-    const direccionCliente = document.getElementById('customerAddress').value;
-
-    fetch(`http://localhost:3000/api/cuentas/${idCuenta}/pedido`, {
-        method: 'GET'
-    })
-    .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch order details'))
-    .then(orderDetails => {
-        const invoiceData = {
-            id_cuenta: parseInt(idCuenta),
-            nit_cliente: nitCliente,
-            nombre_cliente: nombreCliente,
-            direccion_cliente: direccionCliente,
-            detalles: orderDetails
-        };
-
-        return fetch('http://localhost:3000/api/facturas', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(invoiceData)
-        });
-    })
-    .then(response => response.ok ? response.json() : Promise.reject('Failed to generate invoice'))
-    .then(invoice => {
-        console.log('Factura generada:', invoice);
-        displayInvoiceDetails(invoice);
-        alert('Factura generada exitosamente!');
-        closeInvoiceModal();
-        fetchTables(); // Refresca la lista de mesas para actualizar estados
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error: ' + error.message);
-    });
-}
-
-function displayInvoiceDetails(invoice) {
-    document.getElementById('invoiceAccountId').textContent = invoice.id_cuenta;
-    document.getElementById('invoiceDate').textContent = new Date().toLocaleString(); // Ejemplo de fecha/hora actual
-    const itemsList = document.getElementById('invoiceItems');
-    itemsList.innerHTML = '';
-
-    invoice.detalles.forEach(item => {
-        const itemElement = document.createElement('li');
-        itemElement.textContent = `Item ID: ${item.id_item}, Nombre: ${item.nombre}, Precio: $${item.precio}, Cantidad: ${item.cantidad}, Subtotal: $${item.subtotal}`;
-        itemsList.appendChild(itemElement);
-    });
-
-    const total = invoice.detalles.reduce((acc, item) => acc + item.subtotal, 0);
-    document.getElementById('invoiceTotal').textContent = total.toFixed(2);
-}
-
-function fetchMeseros() {
-    fetch('http://localhost:3000/api/usuarios')
-        .then(response => response.ok ? response.json() : Promise.reject('Failed to fetch waiters'))
-        .then(meseros => {
-            const select = document.getElementById('meseroSelect'); // Asegúrate de que este elemento exista en tu HTML
-            select.innerHTML = ''; // Limpiar opciones anteriores
-            meseros.forEach(mesero => {
-                const option = document.createElement('option');
-                option.value = mesero.id_usuario;
-                option.textContent = mesero.nombre;
-                select.appendChild(option);
-            });
-        })
-        .catch(error => console.error('Error fetching waiters:', error));
+function removeItem(button) {
+    let item = button.parentNode;
+    item.remove();
 }
