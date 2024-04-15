@@ -2,35 +2,48 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #f4f4f4;
+    background-color: #333;
 }
 
 h1, h2 {
-    color: #333;
+    color: #fff;
     text-align: center;
 }
 
 section {
-    background-color: #fff;
+    background-color: #5f5f5f;
     padding: 20px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px #5f5f5f;
     margin-bottom: 20px;
+    width: 500px;
+    margin-left: auto; /* Centrar a la izquierda */
+    margin-right: auto;
+    align-items: center;
+    align-content: center;
+    flex: content;
 }
 
 input[type="number"],
 input[type="text"],
 textarea {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     width: 100%;
-    padding: 10px;
+    padding: 10px; 
     margin-bottom: 10px;
     border-radius: 5px;
     border: 1px solid #ddd;
+    resize: none;
+    box-sizing: border-box;
+}
+
+#morivoQueja {
+    height: 100px;
 }
 
 button {
     padding: 10px 15px;
-    background-color: #0056b3;
+    background-color: #f44336;
     color: white;
     border: none;
     cursor: pointer;
@@ -39,5 +52,5 @@ button {
 }
 
 button:hover {
-    background-color: #003d82;
+    background-color: #cc0000;
 }

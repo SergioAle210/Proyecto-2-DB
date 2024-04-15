@@ -1,34 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Feedback de Usuarios</title>
-    <link rel="stylesheet" href="feedback.css">
-</head>
-<body>
+    <link rel="stylesheet" href="feedback.css" />
+  </head>
+  <body>
     <h1>Feedback de Usuarios</h1>
 
     <section id="encuestas">
-        <h2>Registrar Encuesta</h2>
-        <form id="formEncuesta">
-            <input type="number" id="idCuentaEncuesta" placeholder="ID de la Cuenta" required>
-            <input type="number" id="amabilidadMesero" placeholder="Amabilidad del Mesero (1-5)" required min="1" max="5">
-            <input type="number" id="exactitudPedido" placeholder="Exactitud del Pedido (1-5)" required min="1" max="5">
-            <button type="submit">Enviar Encuesta</button>
-        </form>
+      <h2>Registrar Encuesta</h2>
+      <form id="formEncuesta">
+        <input
+          type="number"
+          id="idCuentaEncuesta"
+          placeholder="ID de la Cuenta"
+          required
+        />
+        <input
+          type="number"
+          id="amabilidadMesero"
+          placeholder="Amabilidad del Mesero (1-5)"
+          required
+          min="1"
+          max="5"
+        />
+        <input
+          type="number"
+          id="exactitudPedido"
+          placeholder="Exactitud del Pedido (1-5)"
+          required
+          min="1"
+          max="5"
+        />
+        <button type="submit">Enviar Encuesta</button>
+      </form>
     </section>
 
     <section id="quejas">
-        <h2>Registrar Queja</h2>
-        <form id="formQueja">
-            <input type="text" id="idClienteQueja" placeholder="ID del Cliente" required>
-            <textarea id="motivoQueja" placeholder="Motivo de la Queja" required></textarea>
-            <input type="number" id="clasificacionQueja" placeholder="Clasificación (1-5)" required min="1" max="5">
-            <button type="submit">Enviar Queja</button>
-        </form>
+      <h2>Registrar Queja</h2>
+      <form id="formQueja">
+        <input
+          type="text"
+          id="idClienteQueja"
+          placeholder="ID del Cliente"
+          required
+        />
+        <textarea
+          id="motivoQueja"
+          placeholder="Motivo de la Queja"
+          required
+        ></textarea>
+        <input
+          type="number"
+          id="clasificacionQueja"
+          required
+          min="1"
+          max="5"
+          placeholder="Clasificación de la Queja (1-5)"
+        />
+        <input
+          type="number"
+          id="idEmpleadoQueja"
+          required
+          placeholder="ID del Empleado que recibe la queja"
+          min="1"
+        />
+        <input
+          type="number"
+          id="itemSelect"
+          required
+          placeholder="ID del item"
+          min="1"
+        />
+        <button type="submit">Enviar Queja</button>
+      </form>
     </section>
 
     <script src="feedback.js"></script>
-</body>
+  </body>
 </html>

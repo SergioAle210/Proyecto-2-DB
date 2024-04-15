@@ -1,9 +1,9 @@
 document.getElementById('formEncuesta').addEventListener('submit', function(event) {
     event.preventDefault();
     const encuesta = {
-        id_cuenta: document.getElementById('idCuentaEncuesta').value,
-        amabilidad_mesero: document.getElementById('amabilidadMesero').value,
-        exactitud_pedido: document.getElementById('exactitudPedido').value
+        id_cuenta: parseInt(document.getElementById('idCuentaEncuesta').value),
+        amabilidad_mesero: parseInt(document.getElementById('amabilidadMesero').value),
+        exactitud_pedido: parseInt(document.getElementById('exactitudPedido').value)
     };
 
     fetch('http://localhost:3000/api/feedback/encuestas', {
@@ -21,10 +21,11 @@ document.getElementById('formEncuesta').addEventListener('submit', function(even
 document.getElementById('formQueja').addEventListener('submit', function(event) {
     event.preventDefault();
     const queja = {
-        id_cliente: document.getElementById('idClienteQueja').value,
+        id_cliente: parseInt(document.getElementById('idClienteQueja').value),
         motivo: document.getElementById('motivoQueja').value,
-        clasificacion: document.getElementById('clasificacionQueja').value
-        // Añade otros campos si son necesarios según tu modelo de datos
+        clasificacion: parseInt(document.getElementById('clasificacionQueja').value),
+        id_empleado: parseInt(document.getElementById('idEmpleadoQueja').value),
+        id_item: parseInt(document.getElementById('itemSelect').value)
     };
 
     fetch('http://localhost:3000/api/feedback/quejas', {

@@ -7,7 +7,7 @@ const registrarEncuesta = async (req, res) => {
   const { id_cuenta, amabilidad_mesero, exactitud_pedido } = req.body;
   try {
     const nuevaEncuesta = await pool.query(
-      'INSERT INTO encuestas (id_cuenta, amabilidad_mesero, exactitud_pedido) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO encuestas (id_cuenta, amabilidad_mesero, exactitud_pedido, fecha_hora) VALUES ($1, $2, $3, NOW()) RETURNING *',
       [id_cuenta, amabilidad_mesero, exactitud_pedido]
     );
     res.status(201).json(nuevaEncuesta.rows[0]);
