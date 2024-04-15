@@ -104,7 +104,7 @@ function populateItemSelect(items) {
     select.innerHTML = '';
     items.forEach(item => {
         const option = document.createElement('option');
-        option.value = item.id;
+        option.value = item.id_item;
         option.textContent = `${item.nombre} - $${parseFloat(item.precio).toFixed(2)}`;
         select.appendChild(option);
     });
