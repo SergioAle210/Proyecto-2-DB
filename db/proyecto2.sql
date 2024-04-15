@@ -70,9 +70,8 @@ CREATE TABLE
     Facturas (
         ID_Factura SERIAL PRIMARY KEY,
         ID_Cuenta INTEGER NOT NULL REFERENCES Cuentas (ID_Cuenta),
-        PedidoID INTEGER NOT NULL REFERENCES Pedidos (ID_Pedido),
         NIT_Cliente VARCHAR(20),
-        Nombre_Cliente VARCHAR(255) NOT NULL,
+        Nombre_Cliente VARCHAR(255),
         Direccion_Cliente VARCHAR(255),
         Total NUMERIC(10, 2) NOT null,
         FechaHora TIMESTAMP NOT NULL
@@ -162,7 +161,6 @@ FOR EACH ROW
 WHEN (NEW.Estado = 'cerrada')
 EXECUTE FUNCTION update_mesastate();
 
--- Creado de facturas automatica
 CREATE OR REPLACE FUNCTION create_factura_from_cuenta()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -171,18 +169,24 @@ BEGIN
     -- Calcular el total de la factura sumando todos los precios de los items pedidos
     SELECT SUM(i.precio * dp.cantidad) INTO total_factura
     FROM detalle_pedido dp
-    JOIN items i ON dp.id_item = i.id_item
+    INNER JOIN items i ON dp.id_item = i.id_item
     WHERE dp.id_pedido IN (SELECT id_pedido FROM pedidos WHERE id_cuenta = NEW.id_cuenta);
 
-    -- Insertar una nueva factura con el total calculado
-    INSERT INTO facturas (id_cuenta, fecha_hora, total)
-    VALUES (NEW.id_cuenta, NOW(), total_factura);
+    IF total_factura IS NULL THEN
+        RAISE EXCEPTION 'No se encontraron pedidos para esta cuenta.';
+    END IF;
+
+    -- Insertar una nueva factura con el total calculado y otros detalles de cliente
+    INSERT INTO facturas (id_cuenta, FechaHora, total)
+    SELECT NEW.id_cuenta, NOW(), total_factura
+    FROM cuentas c
+    WHERE c.id_cuenta = NEW.id_cuenta;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER create_factura_on_cuenta_close
+CREATE OR REPLACE TRIGGER create_factura_on_cuenta_close
 AFTER UPDATE OF estado ON cuentas
 FOR EACH ROW
 WHEN (NEW.estado = 'cerrada')
