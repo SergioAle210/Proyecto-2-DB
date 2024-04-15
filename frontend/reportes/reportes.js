@@ -132,7 +132,7 @@ function obtenerReporteEficienciaMeseros() {
         const reporteEficienciaMeserosDiv = document.getElementById('reporteEficienciaMeseros');
         reporteEficienciaMeserosDiv.innerHTML = ''; // Limpiar el contenido anterior
         data.forEach(item => {
-            reporteEficienciaMeserosDiv.innerHTML += `<p>En el mes y año ${item.mes} El mesero ${item.nombre_mesero} tiene una amabilidad de ${item.promedio_amabilidad} y una exactitud de ${item.promedio_exactitud}</p>`;
+            reporteEficienciaMeserosDiv.innerHTML += `<p>En el mes y año ${item.mes} El mesero ${item.nombre_mesero} tiene una amabilidad de ${parseFloat(item.promedio_amabilidad).toFixed(2)} y una exactitud de ${parseFloat(item.promedio_exactitud).toFixed(2)}</p>`;
         });
     })
     .catch(error => {
