@@ -19,35 +19,30 @@ const mesas = async (req, res) => {
   }
 };
 
-const abrirCuenta = async (req, res) => {
-  const idMesa = req.params.id_mesa;
+async function abrirCuenta(req, res) {
+  const { id_mesa } = req.params;
   try {
-    await pool.query('BEGIN'); // Iniciar transacción
+      const meseros = await getMeseros();
+      if (meseros.length === 0) {
+          return res.status(400).json({ error: 'No hay meseros disponibles' });
+      }
+      const mesero = meseros[0]; // Asume que al menos un mesero está disponible
 
-    const cuentaExistente = await pool.query('SELECT * FROM cuentas WHERE id_mesa = $1 AND estado = \'abierta\'', [idMesa]);
-    if (cuentaExistente.rows.length > 0) {
-      await pool.query('ROLLBACK'); // Revertir transacción si ya existe una cuenta abierta
-      return res.status(400).json({ message: 'Ya existe una cuenta abierta para esta mesa.' });
-    }
-
-    const nuevaCuenta = await pool.query(
-      'INSERT INTO cuentas (id_mesa, id_empleado, estado, fecha_apertura) VALUES ($1, 2, \'abierta\', NOW()) RETURNING *',
-      [idMesa]
-    );
-
-    await pool.query(
-      'UPDATE mesas SET estado = \'ocupada\' WHERE id_mesa = $1',
-      [idMesa]
-    );
-
-    await pool.query('COMMIT'); // Confirmar transacción
-    res.status(201).json({ message: 'Cuenta abierta y mesa ocupada exitosamente.', cuenta: nuevaCuenta.rows[0] });
+      const resultado = await pool.query(
+          'INSERT INTO cuentas (id_mesa, id_empleado, estado, fecha_apertura) VALUES ($1, $2, \'abierta\', NOW()) RETURNING *',
+          [id_mesa, mesero.id_usuario]
+      );
+      res.json(resultado.rows[0]);
   } catch (error) {
-    await pool.query('ROLLBACK'); // Revertir transacción en caso de error
-    console.error('Error al abrir la cuenta de la mesa:', error);
-    res.status(500).json({ message: 'Error al abrir la cuenta de la mesa', error });
+      console.error('Error al abrir la cuenta de la mesa:', error);
+      res.status(500).send('Error al abrir la cuenta');
   }
-};
+}
+
+
+
+
+
 
 
 
@@ -81,15 +76,20 @@ const cerrarCuenta = async (req, res) => {
   }
 };
 
-const getMeseros = async (req, res) => {
+async function getMeseros() {
   try {
-      const result = await pool.query("SELECT ID_Usuario, Nombre FROM Usuarios WHERE Rol = 'Mesero';");
-      res.json(result.rows);
-  } catch (err) {
-      console.error('Error fetching waiters:', err);
-      res.status(500).send('Error fetching waiters');
+      const result = await pool.query('SELECT * FROM usuarios WHERE rol = $1', ['Mesero']);
+      if (result.rows.length > 0) {
+          return result.rows; // Devuelve una lista de meseros
+      } else {
+          throw new Error('No hay meseros disponibles');
+      }
+  } catch (error) {
+      console.error('Error fetching waiters:', error);
+      throw error; // Propaga el error para manejarlo en la función superior
   }
-};
+}
+
 
 // Rutas
 router.get('/', mesas);

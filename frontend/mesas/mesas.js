@@ -55,17 +55,31 @@ function setupEventListeners() {
 }
 
 function openAccount(id_mesa) {
-    fetch(`http://localhost:3000/api/mesas/${id_mesa}/abrir-cuenta`, { method: 'POST' })
-        .then(response => response.ok ? response.json() : Promise.reject('Failed to open account'))
-        .then(() => {
-            alert('Account opened successfully!');
-            fetchTables();
-        })
-        .catch(error => {
-            console.error('Error opening account:', error);
-            alert('Failed to open account: ' + error);
-        });
+    const requestBody = JSON.stringify({ id_mesa });
+    console.log("Sending request to open account with data:", requestBody);
+
+    fetch(`http://localhost:3000/api/mesas/${id_mesa}/abrir-cuenta`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: requestBody
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Failed to open account with status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert('Account opened successfully!');
+        fetchTables();  // Refresh the table list
+    })
+    .catch(error => {
+        console.error('Error opening account:', error);
+        alert('Failed to open account: ' + error);
+    });
 }
+
+
 
 function closeAccount(id_cuenta) {
     fetch(`http://localhost:3000/api/mesas/cuentas/${id_cuenta}/cerrar`, { method: 'PUT' })
