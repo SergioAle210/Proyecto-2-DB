@@ -314,4 +314,3 @@ ON Quejas
 FOR EACH ROW 
 EXECUTE PROCEDURE registro_movimientos();
 
-SELECT * FROM bitacora;
