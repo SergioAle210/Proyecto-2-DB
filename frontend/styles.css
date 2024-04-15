@@ -60,7 +60,7 @@ nav ul li a::after {
     left: 0;
     width: 100%;
     height: 3px; /* Grosor de la línea */
-    background-color: #007bff; /* Color de la línea */
+    background-color: #f44336; /* Color de la línea */
     transform: scaleX(0); /* Por defecto, la línea estará oculta */
     transition: transform 0.3s ease; /* Transición suave para el efecto */
 }
