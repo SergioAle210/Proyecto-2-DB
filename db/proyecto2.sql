@@ -31,6 +31,7 @@ CREATE TABLE
     Cuentas (
         ID_Cuenta SERIAL PRIMARY KEY,
         ID_Mesa INTEGER NOT NULL REFERENCES Mesas (ID_Mesa),
+        ID_Empleado INTEGER NOT NULL REFERENCES Usuarios (ID_Usuario),
         Estado VARCHAR(100) NOT NULL CHECK (Estado IN ('abierta', 'cerrada')),
         Fecha_Apertura TIMESTAMP NOT NULL,
         Fecha_Cierre TIMESTAMP
@@ -41,12 +42,9 @@ CREATE TABLE
     Pedidos (
         ID_Pedido SERIAL PRIMARY KEY,
         ID_Cuenta INTEGER NOT NULL REFERENCES Cuentas (ID_Cuenta),
-        Fecha_Hora_Pedido TIMESTAMP NOT NULL
+        Fecha_Hora_Pedido TIMESTAMP NOT NULL,
+        Estado VARCHAR(255)
     );
-   
-ALTER TABLE pedidos
-ADD COLUMN estado VARCHAR(255);
-
 
 -- Platos y Bebidas (Items)
 CREATE TABLE
@@ -78,7 +76,6 @@ CREATE TABLE
         Direccion_Cliente VARCHAR(255),
         Total NUMERIC(10, 2) NOT null,
         FechaHora TIMESTAMP NOT NULL
-
     );
 
 -- Pagos
@@ -96,7 +93,8 @@ CREATE TABLE
         ID_Encuesta SERIAL PRIMARY KEY,
         ID_Cuenta INTEGER NOT NULL REFERENCES Cuentas (ID_Cuenta),
         Amabilidad_Mesero INTEGER CHECK (Amabilidad_Mesero BETWEEN 1 AND 5),
-        Exactitud_Pedido INTEGER CHECK (Exactitud_Pedido BETWEEN 1 AND 5)
+        Exactitud_Pedido INTEGER CHECK (Exactitud_Pedido BETWEEN 1 AND 5),
+        Fecha_Hora TIMESTAMP NOT NULL
     );
 
 -- Quejas
@@ -148,27 +146,7 @@ CREATE INDEX idx_quejas_empleado ON Quejas (ID_Empleado);
 CREATE INDEX idx_quejas_item ON Quejas (ID_Item);
 CREATE INDEX idx_quejas_fecha_hora ON Quejas (Fecha_Hora);
 
-
-    
 --  Triggers
--- Actualizar estado de mesas
-
-
-CREATE OR REPLACE FUNCTION update_statemesa_aftrpedido()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Actualizar el estado de la mesa a 'ocupada' cuando se inserta un nuevo pedido
-    UPDATE mesas SET estado = 'ocupada'
-    WHERE id_mesa = NEW.id_mesa;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_statemesa_aftrpedido
-AFTER INSERT ON Pedidos
-FOR EACH ROW
-EXECUTE FUNCTION update_statemesa_aftrpedido();
-
 CREATE OR REPLACE FUNCTION update_mesastate()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -176,8 +154,8 @@ BEGIN
     WHERE id_mesa = (SELECT id_mesa FROM cuentas WHERE id_cuenta = NEW.id_cuenta);
     RETURN NEW;
 END;
-
 $$ LANGUAGE plpgsql;
+
 CREATE TRIGGER update_mesa_state_aftercierre
 AFTER UPDATE OF Estado ON Cuentas
 FOR EACH ROW
@@ -211,23 +189,6 @@ WHEN (NEW.estado = 'cerrada')
 EXECUTE FUNCTION create_factura_from_cuenta();
 
 
---Actualización de Inventario
-CREATE OR REPLACE FUNCTION update_inventory()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Actualizar el stock del ítem pedido restando la cantidad pedida
-    UPDATE items SET stock = stock - NEW.cantidad
-    WHERE id_item = NEW.id_item;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-CREATE TRIGGER inventario_after_pedido
-AFTER INSERT ON Detalle_Pedido
-FOR EACH ROW
-EXECUTE FUNCTION update_inventory();
-
-
-
 --Cálculo de Propina
 CREATE OR REPLACE FUNCTION calculate_tip()
 RETURNS TRIGGER AS $$
@@ -256,35 +217,6 @@ AFTER UPDATE OF estado ON pedidos
 FOR EACH ROW
 WHEN (NEW.estado = 'cerrado')
 EXECUTE FUNCTION calculate_tip();
-
-
---Feedback
-CREATE OR REPLACE FUNCTION update_waiter_feedback_score()
-RETURNS TRIGGER AS $$
-DECLARE
-    average_kindness NUMERIC;
-    average_accuracy NUMERIC;
-BEGIN
-    -- Calcular la nueva puntuación promedio de amabilidad y exactitud para el mesero asociado
-    SELECT AVG(amabilidad_mesero), AVG(exactitud_pedido) INTO average_kindness, average_accuracy
-    FROM encuestas
-    WHERE id_cuenta = NEW.id_cuenta; -- Suponiendo que id_cuenta pueda usarse para determinar el mesero
-
-    -- Actualizar la tabla de meseros (o la tabla que mantenga las puntuaciones de los meseros)
-    UPDATE meseros SET 
-        puntuacion_amabilidad = average_kindness,
-        puntuacion_exactitud = average_accuracy
-    WHERE id_mesero = (SELECT id_mesero FROM cuentas WHERE id_cuenta = NEW.id_cuenta); -- Necesitas una forma de conectar cuentas con meseros
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_feedback
-AFTER INSERT ON Encuestas
-FOR EACH ROW
-EXECUTE FUNCTION update_waiter_feedback_score();
-
 
 
 CREATE OR REPLACE FUNCTION log_estado_pedido() 
