@@ -10,7 +10,7 @@ function obtenerListadoBebidas() {
             const bebidasListDiv = document.getElementById('bebidasList');
             bebidasListDiv.innerHTML = ''; // Limpiar el contenido anterior
             data.forEach(bebida => {
-                bebidasListDiv.innerHTML += `<p>Fecha: ${bebida.fecha_pedido} - Hora: ${bebida.hora_pedido}:${bebida.minutos_pedido} - Bebida: ${bebida.nombre_bebida}</p>`;
+                bebidasListDiv.innerHTML += `<p>Fecha: ${bebida.fecha_pedido} - Hora: ${bebida.hora_pedido}:${bebida.minutos_pedido} - Bebida: ${bebida.nombre_bebida} - Cantidad: ${bebida.cantidad_por_hacer}</p>`;
             });
         })
         .catch(error => {
