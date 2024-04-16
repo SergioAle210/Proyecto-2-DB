@@ -51,7 +51,7 @@
           <div id="orderDetails" style="display: none"></div>
           <ul id="invoiceItems"></ul>
           <label for="customerNIT">NIT Cliente:</label>
-          <input type="text" id="customerNIT" required />
+          <input type="text" id="customerNIT" name="customerNIT" required />
           <label for="customerName">Nombre Cliente:</label>
           <input type="text" id="customerName" required />
           <label for="customerAddress">Dirección Cliente:</label>
@@ -60,25 +60,19 @@
           <div id="paymentDetails">
             <h3>Métodos de Pago</h3>
             <div>
-              <label for="paymentMethod">Método de Pago:</label>
-              <select id="paymentMethod">
+              <label for="paymentType">Método de Pago:</label>
+              <select id="paymentType">
                 <option value="efectivo">Efectivo</option>
                 <option value="tarjeta">Tarjeta</option>
-                <!-- Añadir más métodos de pago según sea necesario -->
               </select>
-            </div>
-            <div>
-              <label for="paymentAmount">Monto:</label>
-              <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="Ingrese el monto" required>
-            </div>
-            <button type="button" onclick="addPayment()">Añadir Pago</button>
+            
           </div>
-          <!-- Aquí se añadirán los métodos de pago -->
-          <div id="addedPayments"></div>
+          <div>
+            <label for="paymentAmount">Monto:</label>
+            <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="Ingrese el monto" required>
+        </div>
+        <button type="button" id="submitInvoiceBtn">Enviar Factura</button>
           
-          <button type="button" onclick="submitInvoice()">
-            Enviar Factura
-          </button>
         </form>
         <button type="button" onclick="closeInvoiceModal()">Cerrar</button>
       </div>

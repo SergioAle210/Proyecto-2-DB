@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../../conn');  
+const pool = require('../../conn');
 
 // Controladores
 const obtenerPedido = async (req, res) => {
@@ -23,7 +23,7 @@ const obtenerPedido = async (req, res) => {
     console.log(`Detalles del pedido enviados con éxito para id_cuenta ${id_cuenta}`);
 
   } catch (error) {
-    console.error(error);
+    console.error('Error al obtener los detalles del pedido:', error);
     res.status(500).send('Error al obtener los detalles del pedido');
   }
 };
@@ -31,6 +31,8 @@ const obtenerPedido = async (req, res) => {
 const obtenerFactura = async (req, res) => {
   try {
     const { id_factura } = req.params;
+    console.log(`Fetching invoice details for invoice ID: ${id_factura}`);
+
     const factura = await pool.query(
       `SELECT f.*, dp.id_pedido, i.nombre, dp.cantidad, i.precio, (dp.cantidad * i.precio) as subtotal
        FROM facturas f
@@ -40,22 +42,28 @@ const obtenerFactura = async (req, res) => {
        WHERE f.id_factura = $1;`,
       [id_factura]
     );
+    console.log('Invoice details:', factura.rows);
+
     res.json(factura.rows);
   } catch (error) {
-    console.error(error);
+    console.error('Error al obtener la factura:', error);
     res.status(500).send('Error al obtener la factura');
   }
 };
 
 const cerrarCuentaYGenerarFactura = async (req, res) => {
-  const { id_cuenta, nit_cliente, nombre_cliente, direccion_cliente } = req.body;
+  const { id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, pagos } = req.body;
+  console.log(`Attempting to close account and generate invoice for account ID: ${id_cuenta}`);
+
   try {
     await pool.query('BEGIN'); // Start transaction
+
     // Close the account
     const updatedAccount = await pool.query(
       'UPDATE cuentas SET estado = \'cerrada\', fecha_cierre = NOW() WHERE id_cuenta = $1 RETURNING *',
       [id_cuenta]
     );
+    console.log('Account updated:', updatedAccount.rows[0]);
 
     // Calculate total from orders
     const orders = await pool.query(
@@ -64,14 +72,24 @@ const cerrarCuentaYGenerarFactura = async (req, res) => {
     );
     const total = orders.rows[0].total;
 
-    // Generate invoice
+    // Insert the invoice
     const invoice = await pool.query(
       'INSERT INTO facturas (id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total, fecha) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
       [id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total]
     );
+    console.log('Invoice generated:', invoice.rows[0]);
+
+    // Registro de los pagos
+    for (const pago of pagos) {
+      const paymentResult = await pool.query(
+        'INSERT INTO pagos (id_factura, monto, tipo_pago) VALUES ($1, $2, $3)',
+        [invoice.rows[0].id_factura, pago.monto, pago.tipo_pago]
+      );
+      console.log('Payment registered:', paymentResult);
+    }
 
     await pool.query('COMMIT'); // Commit transaction
-    res.status(201).json({ account: updatedAccount.rows[0], invoice: invoice.rows[0] });
+    res.status(201).json({ account: updatedAccount.rows[0], invoice: invoice.rows[0], pagos });
   } catch (error) {
     await pool.query('ROLLBACK'); // Rollback transaction on error
     console.error('Error closing account and generating invoice:', error);
@@ -79,17 +97,20 @@ const cerrarCuentaYGenerarFactura = async (req, res) => {
   }
 };
 
-
 const registrarPagoDeFactura = async (req, res) => {
   const { id_factura, monto, tipo_pago } = req.body;
+  console.log(`Registering payment for invoice ID: ${id_factura}`);
+
   try {
-    await pool.query(
+    const paymentResult = await pool.query(
       'INSERT INTO pagos (id_factura, monto, tipo_pago) VALUES ($1, $2, $3);',
       [id_factura, monto, tipo_pago]
     );
+    console.log('Payment registered:', paymentResult);
+
     res.status(201).send('Pago registrado correctamente');
   } catch (error) {
-    console.error(error);
+    console.error('Error al registrar el pago:', error);
     res.status(500).send('Error al registrar el pago');
   }
 };

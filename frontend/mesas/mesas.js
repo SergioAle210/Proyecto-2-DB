@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     fetchTables();
+    document.getElementById('submitInvoiceBtn').addEventListener('click', submitInvoice);
+
     setupEventListeners();
 });
 
@@ -180,26 +182,97 @@ function removeItem(button) {
     item.remove();
 }
 
-
 function addPayment() {
-    // Obtener la información del método de pago y el monto
-    var paymentMethod = document.getElementById('paymentMethod').value;
-    var paymentAmount = document.getElementById('paymentAmount').value;
-  
-    // Validar que el monto sea positivo
-    if (paymentAmount <= 0) {
-      alert("El monto debe ser mayor que cero.");
-      return;
-    }
-  
-    // Agregar a una lista o contenedor de métodos de pago
-    var addedPayments = document.getElementById('addedPayments');
-    var paymentInfo = document.createElement('p');
-    paymentInfo.textContent = `Método: ${paymentMethod}, Monto: $${parseFloat(paymentAmount).toFixed(2)}`;
-    addedPayments.appendChild(paymentInfo);
-  
-    // Limpiar los campos para permitir más entradas
-    document.getElementById('paymentAmount').value = "";
-  }
+    // Obtain the payment method element
+    const paymentMethodElement = document.getElementById('paymentType');
 
-  
+    // Log element to console to debug
+    console.log("paymentMethodElement:", paymentMethodElement);
+
+    if (!paymentMethodElement) {
+        alert("Error: Elemento del método de pago no está disponible.");
+        return;
+    }
+
+    const paymentMethod = paymentMethodElement.value;
+
+    // Add to a list or container of payment methods
+    const addedPayments = document.getElementById('addedPayments');
+    if (!addedPayments) {
+        console.error("addedPayments container not found");
+        alert("Error: El contenedor para métodos de pago añadidos no está disponible.");
+        return;
+    }
+    const paymentInfo = document.createElement('p');
+    paymentInfo.textContent = `Método: ${paymentMethod}`;
+    addedPayments.appendChild(paymentInfo);
+
+    // Reset the select to allow more entries
+    paymentMethodElement.selectedIndex = 0;
+}
+
+
+
+function submitInvoice() {
+    console.log('submitInvoice called');
+
+    console.log(document.getElementById('invoiceAccountId'));
+    console.log(document.getElementById('customerNIT'));
+    console.log(document.getElementById('customerName'));
+    console.log(document.getElementById('customerAddress'));
+    console.log(document.getElementById('paymentType'));
+    console.log(document.getElementById('paymentAmount'));
+    
+    const idCuenta = document.getElementById('invoiceAccountId').textContent; // Asegúrate que esto tenga el valor correcto
+    const nitCliente = document.getElementById('customerNIT').value;
+    const nombreCliente = document.getElementById('customerName').value;
+    const direccionCliente = document.getElementById('customerAddress').value;
+    const paymentType = document.getElementById('paymentType').value;
+    const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);
+
+    // Validaciones
+    if (!nitCliente || !nombreCliente || !direccionCliente || isNaN(paymentAmount) || paymentAmount <= 0) {
+        alert('Por favor, complete todos los campos y asegúrese de que los valores son correctos.');
+        return;
+    }
+
+    // Datos de la factura
+    const invoiceData = {
+        id_cuenta: parseInt(idCuenta),
+        nit_cliente: nitCliente,
+        nombre_cliente: nombreCliente,
+        direccion_cliente: direccionCliente,
+        // Suponiendo que 'orderDetails' es donde recoges los detalles del pedido.
+        // Esta variable debe estar definida y contener los detalles del pedido.
+        pagos: [{
+            tipo_pago: paymentType,
+            monto: paymentAmount
+        }]
+    };
+
+    // Enviar datos al servidor para crear la factura y registrar el pago
+    fetch('http://localhost:3000/api/facturas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoiceData)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('No se pudo generar la factura.');
+        return response.json();
+    })
+    .then(data => {
+        alert('Factura y pago registrados correctamente.');
+        console.log('Factura y pago:', data);
+        closeInvoiceModal(); // Cierra el modal de factura
+        // Aquí deberías también limpiar los campos o actualizar la UI como sea necesario.
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la factura: ' + error.message);
+    });
+}
+
+function closeInvoiceModal() {
+    document.getElementById('invoiceModal').style.display = 'none';
+    // Aquí puedes también resetear el formulario si lo consideras necesario.
+}
