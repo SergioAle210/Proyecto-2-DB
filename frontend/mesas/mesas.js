@@ -251,7 +251,7 @@ function submitInvoice() {
     };
 
     // Enviar datos al servidor para crear la factura y registrar el pago
-    fetch('http://localhost:3000/api/facturas', {
+    fetch('http://localhost:3000/api/facturas/facturacion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(invoiceData)

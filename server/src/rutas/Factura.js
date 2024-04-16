@@ -53,6 +53,7 @@ const obtenerFactura = async (req, res) => {
 
 const cerrarCuentaYGenerarFactura = async (req, res) => {
   const { id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, pagos } = req.body;
+  console.log("Datos recibidos:", req.body);
   console.log(`Attempting to close account and generate invoice for account ID: ${id_cuenta}`);
 
   try {
@@ -67,14 +68,18 @@ const cerrarCuentaYGenerarFactura = async (req, res) => {
 
     // Calculate total from orders
     const orders = await pool.query(
-      'SELECT sum(precio * cantidad) AS total FROM pedidos JOIN detalle_pedido ON pedidos.id_pedido = detalle_pedido.id_pedido WHERE id_cuenta = $1',
+      `SELECT SUM(items.Precio * detalle_pedido.Cantidad) AS total
+      FROM pedidos
+      JOIN detalle_pedido ON pedidos.ID_Pedido = detalle_pedido.ID_Pedido
+      JOIN items ON detalle_pedido.ID_Item = items.ID_Item
+      WHERE pedidos.ID_Cuenta = $1;`,
       [id_cuenta]
     );
     const total = orders.rows[0].total;
 
     // Insert the invoice
     const invoice = await pool.query(
-      'INSERT INTO facturas (id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total, fecha) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
+      'INSERT INTO facturas (id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total, fechahora) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
       [id_cuenta, nit_cliente, nombre_cliente, direccion_cliente, total]
     );
     console.log('Invoice generated:', invoice.rows[0]);
@@ -118,7 +123,7 @@ const registrarPagoDeFactura = async (req, res) => {
 // Rutas
 router.get('/cuentas/:id_cuenta/pedido', obtenerPedido);
 router.get('/facturas/:id_factura', obtenerFactura);
-router.post('/facturas', cerrarCuentaYGenerarFactura);
+router.post('/facturacion', cerrarCuentaYGenerarFactura);
 router.post('/pagos', registrarPagoDeFactura);
 
 module.exports = router;
