@@ -18,7 +18,6 @@ function fetchTables() {
             }
             data.forEach(mesa => {
                 const tableDiv = document.createElement('div');
-
                 const puedeMover = mesa.area_puede_mover_mesas ? "sí" : "no";
 
                 tableDiv.className = 'table';
@@ -26,6 +25,7 @@ function fetchTables() {
                     <h3>Mesa ${mesa.id_mesa} - Capacidad: ${mesa.capacidad}</h3>
                     <p>Status: ${mesa.estado}</p>
                     <p>La mesa se encuentra en el area de <strong>${mesa.nombre_area}</strong>. La mesa de puede mover: ${puedeMover} </p>
+
                 `;
                 if (mesa.cuenta_estado === 'abierta' && mesa.id_cuenta) {
                     const closeButton = document.createElement('button');
@@ -179,3 +179,27 @@ function removeItem(button) {
     let item = button.parentNode;
     item.remove();
 }
+
+
+function addPayment() {
+    // Obtener la información del método de pago y el monto
+    var paymentMethod = document.getElementById('paymentMethod').value;
+    var paymentAmount = document.getElementById('paymentAmount').value;
+  
+    // Validar que el monto sea positivo
+    if (paymentAmount <= 0) {
+      alert("El monto debe ser mayor que cero.");
+      return;
+    }
+  
+    // Agregar a una lista o contenedor de métodos de pago
+    var addedPayments = document.getElementById('addedPayments');
+    var paymentInfo = document.createElement('p');
+    paymentInfo.textContent = `Método: ${paymentMethod}, Monto: $${parseFloat(paymentAmount).toFixed(2)}`;
+    addedPayments.appendChild(paymentInfo);
+  
+    // Limpiar los campos para permitir más entradas
+    document.getElementById('paymentAmount').value = "";
+  }
+
+  
